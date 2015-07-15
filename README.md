@@ -1,58 +1,39 @@
-LFS Test Server
+LFS Server Go\!
 ======
 
-[rel]: https://github.com/github/lfs-test-server/releases
 [lfs]: https://github.com/github/git-lfs
 [api]: https://github.com/github/git-lfs/blob/master/docs/api.md
 
-LFS Test Server is an example server that implements the [Git LFS API][api]. It
-is intended to be used for testing the [Git LFS][lfs] client and is not in a
-production ready state.
+LFS Server Go\! is an example server that implements the [Git LFS API][api]. 
 
-LFS Test Server is written in Go, with pre-compiled binaries available for Mac,
-Windows, Linux, and FreeBSD.
+This is based off of lfs-test-server.  There are a few differences though.  
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for info on working on LFS Test Server and
-sending patches.
+1. This server uses the same base directory for all objects
+2. The backing store is offloaded to Redis
+3. It will (not yet) allow for object store storage of objects
 
 ## Installing
-
-Download the [latest version][rel]. It is a single binary file.
 
 Alternatively, use the Go installer:
 
 ```
-  $ go install github.com/github/lfs-test-server
+  $ go install github.com/memikequinn/lfs-server-go
 ```
-
 
 ## Building
 
 To build from source, use the Go tools:
 
 ```
-  $ go get github.com/github/lfs-test-server
+  $ go get github.com/memikequinn/lfs-server-go
 ```
 
 
 ## Running
 
 Running the binary will start an LFS server on `localhost:8080` by default.
-There are few things that can be configured via environment variables:
-
-	LFS_LISTEN      # The address:port the server listens on, default: "tcp://:8080"
-	LFS_HOST        # The host used when the server generates URLs, default: "localhost:8080"
-	LFS_METADB      # The database file the server uses to store meta information, default: "lfs.db"
-	LFS_CONTENTPATH # The path where LFS files are store, default: "lfs-content"
-	LFS_ADMINUSER   # An administrator username, default: unset
-	LFS_ADMINPASS   # An administrator password, default: unset
-	LFS_CERT        # Certificate file for tls
-	LFS_KEY         # tls key
-	LFS_SCHEME      # set to 'https' to override default http
-
-If the `LFS_ADMINUSER` and `LFS_ADMINPASS` variables are set, a
-rudimentary admin interface can be accessed via
-`http://$LFS_HOST/mgmt`. Here you can add and remove users.
+All of the configuration settings are stored in config.ini.
+> You'll want to copy config.ini.example to config.ini
 
 To use the LFS test server with the Git LFS client, configure it in the repository's `.gitconfig` file:
 
@@ -87,27 +68,7 @@ openssl req -x509 -sha256 -nodes -days 2100 -newkey rsa:2048 -keyout mine.key -o
 
 Make yourself a run script
 
-```
-#!/bin/bash
-
-set -eu
-set -o pipefail
-
-
-LFS_LISTEN="tcp://:9999"
-LFS_HOST="127.0.0.1:9999"
-LFS_CONTENTPATH="content"
-LFS_ADMINUSER="<cool admin user name>"
-LFS_ADMINPASS="<better admin password>"
-LFS_CERT="mine.crt"
-LFS_KEY="mine.key"
-LFS_SCHEME="https"
-
-export LFS_LISTEN LFS_HOST LFS_CONTENTPATH LFS_ADMINUSER LFS_ADMINPASS LFS_CERT LFS_KEY LFS_SCHEME
-
-./lfs-test-server
-
-```
+Update the config to point at your new keys
 
 Build the server
 
@@ -119,10 +80,7 @@ go build
 Run
 
 ```
-bash run.sh
+./scripts/start.sh
 
 ```
 
-Check the managment page
-
-browser: https://localhost:9999/mgmt
