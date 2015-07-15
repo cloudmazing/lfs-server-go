@@ -1,0 +1,8 @@
+.idea
+tmp/
+lfs-server-go
+config.yaml
+*.db
+*.ini
+*.crt
+*.key

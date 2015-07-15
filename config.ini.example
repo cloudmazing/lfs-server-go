@@ -1,0 +1,25 @@
+[prod]
+Listen = tcp://:9999
+Host = 127.0.0.1:9999
+ContentPath = lfs_content
+AdminUser = admin
+AdminPass = admin
+Cert = mine.crt
+Key = mine.key
+Scheme = https
+Public = true
+MetaDB = lfs.db
+RedisUrl = redis://localhost:6379/0
+
+[dev]
+Listen = tcp://:9999
+Host = 127.0.0.1:9999
+ContentPath = lfs_content
+AdminUser = admin
+AdminPass = admin
+Cert = mine.crt
+Key = mine.key
+Scheme = https
+Public = true
+MetaDB = lfs.db
+RedisUrl = redis://localhost:6379/0
