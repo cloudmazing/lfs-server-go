@@ -6,3 +6,4 @@ config.yaml
 *.ini
 *.crt
 *.key
+lfs-content
