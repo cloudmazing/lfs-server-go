@@ -7,3 +7,5 @@ config.yaml
 *.crt
 *.key
 lfs-content
+test_ldap/test_ldap
+log/*

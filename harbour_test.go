@@ -295,8 +295,8 @@ var (
 	lfsServer        *httptest.Server
 	testMetaStore    *MetaStore
 	testContentStore *ContentStore
-	testUser         = "bilbo"
-	testPass         = "baggins"
+	testUser         = "admin"
+	testPass         = "admin"
 	testAuth         = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(testUser+":"+testPass)))
 	badAuth          = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte("azog:defiler")))
 	content          = "this is my content"

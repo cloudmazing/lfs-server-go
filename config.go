@@ -25,6 +25,8 @@ type Configuration struct {
 	Public      string `config:"public"`
 	MetaDB      string `config:"lfs.db"`
 	RedisUrl    string `config:"redis://localhost:6379/0"`
+	LdapServer	string `config:"ldap://localhost:1389"`
+	LdapBase	string `config:"dc=testers,c=test,o=company"`
 }
 
 type RedisConfigT struct {

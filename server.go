@@ -348,6 +348,6 @@ func isAuthError(err error) bool {
 }
 
 func requireAuth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("WWW-Authenticate", "Basic realm=git-lfs-server")
+	w.Header().Set("WWW-Authenticate", "Basic realm=lfs-server-go")
 	writeStatus(w, r, 401)
 }

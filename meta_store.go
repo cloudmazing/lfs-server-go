@@ -57,7 +57,6 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	}
 
 	var meta MetaObject
-
 	err := s.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(objectsBucket)
 		if bucket == nil {
@@ -74,6 +73,7 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	})
 
 	if err != nil {
+		logger.Log(kv{"fn": "meta_store", "msg": err.Error()})
 		return nil, err
 	}
 
@@ -235,23 +235,7 @@ func (s *MetaStore) authenticate(authorization string) bool {
 		return false
 	}
 	user, password := cs[:i], cs[i+1:]
-
-	value := ""
-
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(usersBucket)
-		if bucket == nil {
-			return errNoBucket
-		}
-
-		value = string(bucket.Get([]byte(user)))
-		return nil
-	})
-
-	if value != "" && value == password {
-		return true
-	}
-	return false
+	return LdapBind(user, password)
 }
 
 type authError struct {
