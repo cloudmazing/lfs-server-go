@@ -87,7 +87,7 @@ func TestGetMetaAuthed(t *testing.T) {
 
 	download := meta.Links["download"]
 
-	if download.Href != baseUrl() + "/objects/"+contentOid {
+	if download.Href != baseUrl()+"/objects/"+contentOid {
 		t.Fatalf("expected download link, got %s", download.Href)
 	}
 }
@@ -150,7 +150,7 @@ func TestPostAuthedNewObject(t *testing.T) {
 		t.Fatal("expected upload link to be present")
 	}
 
-	if upload.Href != baseUrl() + "/objects/"+nonexistingOid {
+	if upload.Href != baseUrl()+"/objects/"+nonexistingOid {
 		t.Fatalf("expected upload link, got %s", upload.Href)
 	}
 }
@@ -188,7 +188,7 @@ func TestPostAuthedExistingObject(t *testing.T) {
 	}
 
 	download := meta.Links["download"]
-	if download.Href != baseUrl() + "/objects/"+contentOid {
+	if download.Href != baseUrl()+"/objects/"+contentOid {
 		t.Fatalf("expected download link, got %s", download.Href)
 	}
 
@@ -197,7 +197,7 @@ func TestPostAuthedExistingObject(t *testing.T) {
 		t.Fatalf("expected upload link to be present")
 	}
 
-	if upload.Href != baseUrl() + "/objects/"+contentOid {
+	if upload.Href != baseUrl()+"/objects/"+contentOid {
 		t.Fatalf("expected upload link, got %s", upload.Href)
 	}
 }

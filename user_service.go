@@ -2,14 +2,15 @@
 Used to consume external authorization.
 Given a key parameter, return a user's ability to download the project refs.
 Uses https://github.com/bndr/gopencils
- */
+*/
 package main
+
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	"encoding/json"
-	"bytes"
-	"errors"
 )
 
 // declare the type of UserAccessGetter
@@ -17,7 +18,7 @@ import (
 //type UserAccessGetter func(url string) string
 
 type UserAccessResponse struct {
-	Access      bool `json:"access"`
+	Access      bool   `json:"access"`
 	Status      string `json:"status"`
 	Message     string `json:"message"`
 	RawResponse []byte
@@ -53,7 +54,7 @@ func NewUserService(base string, username string, project string, action string)
 }
 
 // fills UserAccessResponse.RawResponse and pushes json into struct
-func (us *UserService) GetResponse() (error) {
+func (us *UserService) GetResponse() error {
 	us.Downloader.GetPage()
 	buf := bytes.NewBuffer(us.Downloader.Response)
 	us.UserAccessResponse.RawResponse = buf.Bytes()

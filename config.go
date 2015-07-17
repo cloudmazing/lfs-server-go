@@ -1,13 +1,13 @@
 package main
 
 import (
-	"strings"
-	"github.com/vaughan0/go-ini"
-	"reflect"
 	"fmt"
-	"strconv"
+	"github.com/vaughan0/go-ini"
 	"net/url"
 	"os"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 // Configuration holds application configuration. Values will be pulled from
@@ -25,8 +25,8 @@ type Configuration struct {
 	Public      string `config:"public"`
 	MetaDB      string `config:"lfs.db"`
 	RedisUrl    string `config:"redis://localhost:6379/0"`
-	LdapServer	string `config:"ldap://localhost:1389"`
-	LdapBase	string `config:"dc=testers,c=test,o=company"`
+	LdapServer  string `config:"ldap://localhost:1389"`
+	LdapBase    string `config:"dc=testers,c=test,o=company"`
 }
 
 type RedisConfigT struct {
@@ -44,12 +44,12 @@ func (c *Configuration) IsPublic() bool {
 	return t
 }
 
-
 // Config is the global app configuration
 //var Config = &Configuration{}
 var Config = &Configuration{}
 var RedisConfig = &RedisConfigT{}
 var GoEnv = os.Getenv("GO_ENV")
+
 // iterate thru config.yaml and parse it
 // always called when initializing Config
 func init() {
@@ -72,14 +72,14 @@ func init() {
 		e, ok := file.Get(GoEnv, name)
 		if !ok || e == "" {
 			field.SetString(tag)
-		}else{
+		} else {
 			field.SetString(e)
 		}
 	}
 	RedisConfig = setRedisConfig()
 }
 
-func setRedisConfig() (*RedisConfigT) {
+func setRedisConfig() *RedisConfigT {
 	_url, err := url.Parse(Config.RedisUrl)
 	perror(err)
 	db, _ := strconv.ParseInt(_url.Path, 0, 0)
@@ -92,7 +92,7 @@ func setRedisConfig() (*RedisConfigT) {
 			password = ""
 		}
 	}
-	return &RedisConfigT{Addr:addr, DB: db, Password: password}
+	return &RedisConfigT{Addr: addr, DB: db, Password: password}
 }
 
 func dumpConfig() {

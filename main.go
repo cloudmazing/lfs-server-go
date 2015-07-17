@@ -3,13 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/nmcclain/ldap"
 	"net"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"github.com/nmcclain/ldap"
-	"net/url"
 )
 
 const (
@@ -48,7 +48,7 @@ func LdapBind(user string, password string) bool {
 	ldapCon, err := ldap.Dial("tcp", ldapHost())
 	perror(err)
 	defer ldapCon.Close()
-	reqE := ldapCon.Bind(user,password)
+	reqE := ldapCon.Bind(user, password)
 	resp := false
 	if reqE == nil {
 		resp = true

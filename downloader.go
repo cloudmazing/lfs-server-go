@@ -1,7 +1,8 @@
 package main
+
 import (
-	"net/http"
 	"io/ioutil"
+	"net/http"
 )
 
 type UserServiceAuth struct {
@@ -13,7 +14,7 @@ type Downloader struct {
 	Auth     *UserServiceAuth
 	Url      string
 	Response []byte
-	Status string
+	Status   string
 }
 
 // interface to hold the response
@@ -22,9 +23,11 @@ type Responder interface {
 	RawResponse([]byte) error
 }
 
-func (d *Downloader) GetPage() (error) {
+func (d *Downloader) GetPage() error {
 	// Already set, bounce out. Used for testing
-	if d.Response != nil {return nil}
+	if d.Response != nil {
+		return nil
+	}
 	resp, err := http.Get(d.Url)
 	if err != nil {
 		return err

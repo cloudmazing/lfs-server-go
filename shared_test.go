@@ -1,8 +1,9 @@
 // Helper functions for tests
 package main
+
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	"io"
 )
 
