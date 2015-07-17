@@ -35,11 +35,22 @@ type MetaObject struct {
 	Existing bool
 }
 
-// Representation is object medata as seen by clients of the lfs server.
+// Representation is object metadata as seen by clients of the lfs server.
 type Representation struct {
 	Oid   string           `json:"oid"`
 	Size  int64            `json:"size"`
 	Links map[string]*link `json:"_links"`
+}
+
+// Wrapper for MetaStore so we can use different types
+type GenericMetaStore interface {
+	Put(v *RequestVars) (*MetaObject, error)
+	Get(v *RequestVars) (*MetaObject, error)
+	Close()
+	DeleteUser(user string) error
+	AddUser(user, pass string) error
+	Users() ([]*MetaUser, error)
+	Objects() ([]*MetaObject, error)
 }
 
 // ObjectLink builds a URL linking to the object.
@@ -63,11 +74,11 @@ type link struct {
 type App struct {
 	router       *mux.Router
 	contentStore *ContentStore
-	metaStore    *MetaStore
+	metaStore    GenericMetaStore
 }
 
 // NewApp creates a new App using the ContentStore and MetaStore provided
-func NewApp(content *ContentStore, meta *MetaStore) *App {
+func NewApp(content *ContentStore, meta GenericMetaStore) *App {
 	app := &App{contentStore: content, metaStore: meta}
 
 	r := mux.NewRouter()

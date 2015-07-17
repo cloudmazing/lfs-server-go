@@ -87,6 +87,20 @@ func wrapHttps(l net.Listener, cert, key string) (net.Listener, error) {
 	return tlsListener, nil
 }
 
+func findMetaStore() (GenericMetaStore, error) {
+	switch Config.BackingStore {
+	case "redis":
+		m, err := NewRedisMetaStore()
+		return m, err
+	case "bolt":
+		m, err := NewMetaStore(Config.MetaDB)
+		return m, err
+	default:
+		m, err := NewMetaStore(Config.MetaDB)
+		return m, err
+	}
+}
+
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "-v" {
 		fmt.Println(version)
@@ -110,7 +124,7 @@ func main() {
 		}
 	}
 
-	metaStore, err := NewMetaStore(Config.MetaDB)
+	metaStore, err := findMetaStore()
 	if err != nil {
 		logger.Fatal(kv{"fn": "main", "err": "Could not open the meta store: " + err.Error()})
 	}

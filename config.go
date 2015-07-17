@@ -14,19 +14,20 @@ import (
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
 type Configuration struct {
-	Listen      string `config:"tcp://:8080"`
-	Host        string `config:"localhost:8080"`
-	ContentPath string `config:"lfs-content"`
-	AdminUser   string `config:"admin"`
-	AdminPass   string `config:"admin"`
-	Cert        string `config:""`
-	Key         string `config:""`
-	Scheme      string `config:"http"`
-	Public      string `config:"public"`
-	MetaDB      string `config:"lfs.db"`
-	RedisUrl    string `config:"redis://localhost:6379/0"`
-	LdapServer  string `config:"ldap://localhost:1389"`
-	LdapBase    string `config:"dc=testers,c=test,o=company"`
+	Listen       string `config:"tcp://:8080"`
+	Host         string `config:"localhost:8080"`
+	ContentPath  string `config:"lfs-content"`
+	AdminUser    string `config:"admin"`
+	AdminPass    string `config:"admin"`
+	Cert         string `config:""`
+	Key          string `config:""`
+	Scheme       string `config:"http"`
+	Public       string `config:"public"`
+	MetaDB       string `config:"lfs-test.db"`
+	RedisUrl     string `config:"redis://localhost:6379/0"`
+	BackingStore string `config:"bolt"`
+	LdapServer   string `config:"ldap://localhost:1389"`
+	LdapBase     string `config:"dc=testers,c=test,o=company"`
 }
 
 type RedisConfigT struct {

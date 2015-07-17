@@ -293,7 +293,7 @@ func TestMediaTypesParsed(t *testing.T) {
 
 var (
 	lfsServer        *httptest.Server
-	testMetaStore    *MetaStore
+	testMetaStore    GenericMetaStore
 	testContentStore *ContentStore
 	testUser         = "admin"
 	testPass         = "admin"
@@ -313,7 +313,7 @@ func TestMain(m *testing.M) {
 	os.Remove("lfs-test.db")
 
 	var err error
-	testMetaStore, err = NewMetaStore("lfs-test.db")
+	testMetaStore, err = NewMetaStore(Config.MetaDB)
 	if err != nil {
 		fmt.Printf("Error creating meta store: %s", err)
 		os.Exit(1)
