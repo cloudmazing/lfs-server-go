@@ -346,8 +346,49 @@ func TestMain(m *testing.M) {
 	testMetaStore.Close()
 	os.Remove("lfs-test.db")
 	os.RemoveAll("lfs-content-test")
+	if ret != 0 {
+		os.Exit(ret)
+	}
+	fmt.Println("Starting redis testing")
+	// Start testing redis
+	testMetaStore, err = NewRedisMetaStore()
+	// Clear out the database
+	NewRedisClient().Client.FlushDb()
+	if err != nil {
+		fmt.Printf("Error creating meta store: %s", err)
+		os.Exit(1)
+	}
 
-	os.Exit(ret)
+	testContentStore, err = NewContentStore("lfs-content-test")
+	if err != nil {
+		fmt.Printf("Error creating content store: %s", err)
+		os.Exit(1)
+	}
+
+	if err := seedMetaStore(); err != nil {
+		fmt.Printf("Error seeding meta store: %s", err)
+		os.Exit(1)
+	}
+
+	if err := seedContentStore(); err != nil {
+		fmt.Printf("Error seeding content store: %s", err)
+		os.Exit(1)
+	}
+
+	app1 := NewApp(testContentStore, testMetaStore)
+	lfsServer = httptest.NewServer(app1)
+
+	logger = NewKVLogger(ioutil.Discard)
+
+	ret1 := m.Run()
+
+	lfsServer.Close()
+	testMetaStore.Close()
+	os.Remove("lfs-test.db")
+	os.RemoveAll("lfs-content-test")
+
+	os.Exit(ret1)
+
 }
 
 func seedMetaStore() error {

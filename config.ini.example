@@ -22,4 +22,6 @@ Key = mine.key
 Scheme = https
 Public = true
 MetaDB = lfs.db
+# Options are redis or bolt - bolt has no external dependencies
+BackingStore = redis
 RedisUrl = redis://localhost:6379/0
