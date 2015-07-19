@@ -135,13 +135,12 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 }
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
+	var mus []*MetaUser
 	users, _ := self.redisService.Client.SMembers(UsersHashName).Result()
 	fmt.Println(users)
-	mus := make([]*MetaUser, len(users))
 	for _, user := range users {
 		fmt.Println(user)
-		mu := &MetaUser{Name: user}
-		_ = append(mus, mu)
+		mus = append(mus, &MetaUser{string(user)})
 	}
 	return mus, nil
 }
