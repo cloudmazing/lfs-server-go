@@ -90,7 +90,7 @@ func NewApp(content *ContentStore, meta GenericMetaStore) *App {
 	r.HandleFunc(route, app.PutHandler).Methods("PUT").MatcherFunc(ContentMatcher)
 
 	r.HandleFunc("/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
-
+	app.addMgmt(r)
 	app.router = r
 
 	return app
