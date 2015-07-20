@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"io/ioutil"
-	"os"
 )
 
 // RequestVars contain variables from the HTTP request. Variables from routing, json body decoding, and
@@ -86,7 +85,6 @@ func NewApp(content *ContentStore, meta GenericMetaStore) *App {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/{user}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
-	r.HandleFunc("/{user}/{repo}/rereadAll", app.GetRereadAllHandler).Methods("GET")
 	route := "/{user}/{repo}/objects/{oid}"
 	r.HandleFunc(route, app.GetContentHandler).Methods("GET", "HEAD").MatcherFunc(ContentMatcher)
 	r.HandleFunc(route, app.GetMetaHandler).Methods("GET", "HEAD").MatcherFunc(MetaMatcher)
@@ -157,33 +155,6 @@ func readDir(path string) []string {
 	}
 	return files
 }
-
-// GetMetaHandler retrieves metadata about the object
-func (a *App) GetRereadAllHandler(w http.ResponseWriter, r *http.Request) {
-	rv := unpack(r)
-	//	requireAuth(w, r)
-	//	writeStatus(w, r, 404)
-
-	for _, file := range readDir(Config.ContentPath) {
-		rv.Repo = "apq8064-lx-1-0_amss_device-lfs"
-		rv.User = "qualcomm"
-		fmt.Println("Reading dir", Config.ContentPath + "/" + file)
-		f, _ := os.Open(Config.ContentPath + "/" + file)
-		info, ferr := f.Stat()
-		perror(ferr)
-		rv.Size = info.Size()
-		rv.Oid = strings.Replace(file, "/", "", -1)
-//		rv.Oid = file
-		meta, err := a.metaStore.Put(rv)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("MEta", meta)
-	}
-
-	logRequest(r, 200)
-}
-
 
 // GetMetaHandler retrieves metadata about the object
 func (a *App) GetMetaHandler(w http.ResponseWriter, r *http.Request) {

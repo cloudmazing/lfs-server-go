@@ -2,7 +2,6 @@ package main
 import (
 	"encoding/gob"
 	"bytes"
-	"strings"
 	"errors"
 	"fmt"
 )
@@ -154,10 +153,6 @@ func exists(s string, l []string) bool {
 		if s == t {fmt.Sprintf("Found %s in %v\n", s, l); return true}
 	}
 	return false
-}
-
-func unjackOid(s string) (string) {
-	return strings.Replace(s, "/", "", -1)
 }
 
 func isErrNoRedisHash(err error) bool {
