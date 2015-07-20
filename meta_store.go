@@ -2,10 +2,8 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/gob"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -52,7 +50,7 @@ func NewMetaStore(dbFile string) (*MetaStore, error) {
 // Get retrieves the Meta information for an object given information in
 // RequestVars
 func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !s.authenticate(v.Authorization) {
+	if !authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -82,7 +80,7 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 
 // Put writes meta information from RequestVars to the store.
 func (s *MetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !s.authenticate(v.Authorization) {
+	if !authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -210,42 +208,3 @@ func (s *MetaStore) Objects() ([]*MetaObject, error) {
 	return objects, err
 }
 
-// authenticate uses the authorization string to determine whether
-// or not to proceed. This server assumes an HTTP Basic auth format.
-func (s *MetaStore) authenticate(authorization string) bool {
-	if Config.IsPublic() {
-		return true
-	}
-
-	if authorization == "" {
-		return false
-	}
-
-	if !strings.HasPrefix(authorization, "Basic ") {
-		return false
-	}
-
-	c, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(authorization, "Basic "))
-	if err != nil {
-		return false
-	}
-	cs := string(c)
-	i := strings.IndexByte(cs, ':')
-	if i < 0 {
-		return false
-	}
-	user, password := cs[:i], cs[i+1:]
-	return LdapBind(user, password)
-}
-
-type authError struct {
-	error
-}
-
-func (e authError) AuthError() bool {
-	return true
-}
-
-func newAuthError() error {
-	return authError{errors.New("Forbidden")}
-}

@@ -3,68 +3,67 @@ import (
 	"encoding/gob"
 	"bytes"
 	"strings"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 type RedisMetaStore struct {
 	redisService *RedisService
-	KeyHashName  string
 }
 
 var (
-	errNoRedisHash = errors.New("Redis hash not found in redis")
+	errNoRedisProject = errors.New("Project not found in redis")
 	errRedisObjectNotFound = errors.New("Object not found in redis")
 )
 
 
-const OidHashName = "lfs-meta-oids"
-const UsersHashName = "lfs-meta-users"
-const AllOidsHashName = "all:oids"
+const OidHashName = "lfs-meta:project:oids"
+const ProjectsHashName = "lfs-meta:projects"
+const UsersHashName = "lfs-meta:users"
+const AllOidsHashName = "lfs-meta:all:oids"
 const PasswordKey = "password"
 const UsernameKey = "username"
 
 func NewRedisMetaStore() (*RedisMetaStore, error) {
-	return &RedisMetaStore{KeyHashName: OidHashName, redisService: NewRedisClient()}, nil
+	return &RedisMetaStore{redisService: NewRedisClient()}, nil
 }
 
-func projectObjectKey(repo string) (string) {
-	return fmt.Sprintf("%s:%s", OidHashName, repo)
-}
-
-func size_i(size string) (int64) {
-	r, _ := strconv.ParseInt(fmt.Sprintf("%s", size), 0, 0)
-	return r
-}
 func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !self.authenticate(v.Authorization) {
+	if !authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
 	// Check if the oid exists first
 	if meta, err := self.Get(v); err == nil {
-		meta.Existing = true
-		return meta, nil
+		if !isErrNoRedisHash(err) || !isErrRedisObjectNotFound(err) {
+			meta.Existing = true
+			return meta, nil
+		}
 	}
 
+	client := self.redisService.Client
+	// Create the project
+	_, aErr := client.SAdd(ProjectsHashName, fmt.Sprintf("%s:%s", v.User, v.Repo)).Result()
+	if aErr != nil {
+		return nil, aErr
+	}
+
+	// Add the Oid Record
+	_, err := client.HSet(v.Oid, "size", fmt.Sprintf("%d", v.Size)).Result()
+	if err != nil {
+		return nil, err
+	}
+	// add a record for the hash
+	client.SAdd(AllOidsHashName, v.Oid)
+	// Add the Oid to the project
+	_, err = client.SAdd(projectObjectKey(v.Repo), v.Oid).Result()
+	if err != nil {
+		return nil, err
+	}
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	meta := MetaObject{Oid: v.Oid, Size: v.Size}
-	err := enc.Encode(meta)
-	if err != nil {
-		return nil, err
-	}
-	client := self.redisService.Client
-	// Add the Oid Record
-	_, err = client.HMSet(meta.Oid, "size", fmt.Sprintf("%d", meta.Size)).Result()
-	if err != nil {
-		return nil, err
-	}
-	// Add the Oid to the project
-	_, err = client.SAdd(projectObjectKey(v.Repo), meta.Oid).Result()
-
+	err = enc.Encode(meta)
 	if err != nil {
 		return nil, err
 	}
@@ -72,42 +71,34 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 }
 
 func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !self.authenticate(v.Authorization) {
+
+	if !authenticate(v.Authorization) {
 		logger.Log(kv{"fn": "meta_store", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
 
 	client := self.redisService.Client
-	// first we check to see if the object is a member of the project
-	project_oids, err := client.SMembers(projectObjectKey(v.Repo)).Result()
-	if project_oids == nil {
-		logger.Log(kv{"fn": "meta_store", "msg": errRedisObjectNotFound.Error()})
-		return nil, errNoRedisHash
+	oids, oid_err := client.SMembers(AllOidsHashName).Result()
+	if oid_err != nil {
+		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + oid_err.Error()})
+		return nil, oid_err
 	}
-	if err != nil {
-		logger.Log(kv{"fn": "meta_store", "msg": err.Error()})
-		return nil, err
+	var oid string
+	if exists(v.Oid, oids) {
+		oid = v.Oid
 	}
-	// response into slices, find if one exists
-	oid_exists := func() bool {
-		for _, l_oid := range project_oids {
-			if l_oid == v.Oid {
-				return true
-			}
-		}
-		return false
-	}()
-	size, _ := client.HGet(v.Oid, "size").Result()
-	meta := &MetaObject{Oid: v.Oid, Size: size_i(size), Existing: true}
+
+	size, hg_err := client.HGet(oid, "size").Int64()
+	if hg_err != nil {
+		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid})
+		return nil, hg_err
+	}
+
+	meta := &MetaObject{Oid: v.Oid, Size: size, Existing: true}
 	// if it exists then we return it
-	if oid_exists {
-		dec := gob.NewDecoder(bytes.NewBuffer([]byte(v.Oid)))
-		// put the meta object into the decoder
-		dec.Decode(&meta)
-	} else {
-		logger.Log(kv{"fn": "meta_store", "msg": errRedisObjectNotFound.Error()})
-		return nil, errObjectNotFound
-	}
+	dec := gob.NewDecoder(bytes.NewBuffer([]byte(v.Oid)))
+	// put the meta object into the decoder
+	dec.Decode(&meta)
 	return meta, nil
 }
 
@@ -133,54 +124,78 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 	self.redisService.Client.SAdd(UsersHashName, user).Result()
 	return nil
 }
+
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
 	var mus []*MetaUser
 	users, _ := self.redisService.Client.SMembers(UsersHashName).Result()
-	fmt.Println(users)
 	for _, user := range users {
-		fmt.Println(user)
 		mus = append(mus, &MetaUser{string(user)})
 	}
 	return mus, nil
 }
+
 func (self *RedisMetaStore) Objects() ([]*MetaObject, error) {
 	client := self.redisService.Client
-	members, _ := client.SMembers(AllOidsHashName).Result()
-	mus := make([]*MetaObject, len(members))
-	for _, oid := range mus {
-		client.HGet(oid.Oid, "size").Result()
-		mu := &MetaObject{Oid: oid.Oid, Size: oid.Size, Existing: true}
-		_ = append(mus, mu)
+	oids, _ := client.SMembers(AllOidsHashName).Result()
+	mus := make([]*MetaObject, len(oids))
+	for _, oid := range oids {
+		size, _ := client.HGet(oid, "size").Int64()
+		mu := &MetaObject{Oid: oid, Size: size}
+		mus = append(mus, mu)
 	}
 	return mus, nil
 }
 
-// authenticate uses the authorization string to determine whether
-// or not to proceed. This server assumes an HTTP Basic auth format.
-func (self *RedisMetaStore) authenticate(authorization string) bool {
-	if Config.IsPublic() {
-		return true
+// Helpers
+// Check the oid list for a given oid
+func exists(s string, l []string) bool {
+	for _, t := range l {
+		if s == t {fmt.Sprintf("Found %s in %v\n", s, l); return true}
 	}
+	return false
+}
 
-	if authorization == "" {
-		return false
-	}
+func unjackOid(s string) (string) {
+	return strings.Replace(s, "/", "", -1)
+}
 
-	if !strings.HasPrefix(authorization, "Basic ") {
-		return false
+func isErrNoRedisHash(err error) bool {
+	type isNotThereError interface {
+		errNoRedisProject() bool
 	}
+	if ae, ok := err.(isNotThereError); ok {
+		return ae.errNoRedisProject()
+	}
+	return false
+}
 
-	c, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(authorization, "Basic "))
-	if err != nil {
-		return false
+func isErrRedisObjectNotFound(err error) bool {
+	type errRedisObjectNotFound interface {
+		errRedisObjectNotFound() bool
 	}
-	cs := string(c)
-	i := strings.IndexByte(cs, ':')
-	if i < 0 {
-		return false
+	if ae, ok := err.(errRedisObjectNotFound); ok {
+		return ae.errRedisObjectNotFound()
 	}
-	user, password := cs[:i], cs[i+1:]
-	return LdapBind(user, password)
+	return false
+}
+
+func projectObjectKey(repo string) (string) {
+	return fmt.Sprintf("%s:%s", OidHashName, repo)
+}
+
+func (self *RedisMetaStore) findProject(v *RequestVars) (string, error) {
+	client := self.redisService.Client
+	projects, perr := client.SMembers(ProjectsHashName).Result()
+	perror(perr)
+	for _, p := range projects {
+		if p == v.Repo {return p, nil}
+	}
+	return "", errNoRedisProject
+}
+
+func (self *RedisMetaStore) findProjectOids(project string) ([]string, error) {
+	client := self.redisService.Client
+	return client.SMembers(projectObjectKey(project)).Result()
 }
 

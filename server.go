@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"io/ioutil"
+	"os"
 )
 
 // RequestVars contain variables from the HTTP request. Variables from routing, json body decoding, and
@@ -55,7 +57,7 @@ type GenericMetaStore interface {
 
 // ObjectLink builds a URL linking to the object.
 func (v *RequestVars) ObjectLink() string {
-	path := fmt.Sprintf("/objects/%s", v.Oid)
+	path := fmt.Sprintf("/%s/%s/objects/%s", v.User, v.Repo, v.Oid)
 
 	if Config.IsHTTPS() {
 		return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
@@ -83,13 +85,14 @@ func NewApp(content *ContentStore, meta GenericMetaStore) *App {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
-	route := "/objects/{oid}"
+	r.HandleFunc("/{user}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	r.HandleFunc("/{user}/{repo}/rereadAll", app.GetRereadAllHandler).Methods("GET")
+	route := "/{user}/{repo}/objects/{oid}"
 	r.HandleFunc(route, app.GetContentHandler).Methods("GET", "HEAD").MatcherFunc(ContentMatcher)
 	r.HandleFunc(route, app.GetMetaHandler).Methods("GET", "HEAD").MatcherFunc(MetaMatcher)
 	r.HandleFunc(route, app.PutHandler).Methods("PUT").MatcherFunc(ContentMatcher)
 
-	r.HandleFunc("/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	r.HandleFunc("/{user}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
 	app.addMgmt(r)
 	app.router = r
 
@@ -134,6 +137,53 @@ func (a *App) GetContentHandler(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, content)
 	logRequest(r, 200)
 }
+
+// Deep read, starting at path
+func readDir(path string) []string {
+	contents, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+	var files []string
+	for _, bl := range contents {
+		if !bl.IsDir() {
+			files = append(files, bl.Name())
+		} else {
+			nd := fmt.Sprintf("%s", path + "/" + bl.Name())
+			for _, x := range readDir(nd) {
+				files = append(files, fmt.Sprintf("%s/%s", bl.Name(), x))
+			}
+		}
+	}
+	return files
+}
+
+// GetMetaHandler retrieves metadata about the object
+func (a *App) GetRereadAllHandler(w http.ResponseWriter, r *http.Request) {
+	rv := unpack(r)
+	//	requireAuth(w, r)
+	//	writeStatus(w, r, 404)
+
+	for _, file := range readDir(Config.ContentPath) {
+		rv.Repo = "apq8064-lx-1-0_amss_device-lfs"
+		rv.User = "qualcomm"
+		fmt.Println("Reading dir", Config.ContentPath + "/" + file)
+		f, _ := os.Open(Config.ContentPath + "/" + file)
+		info, ferr := f.Stat()
+		perror(ferr)
+		rv.Size = info.Size()
+		rv.Oid = strings.Replace(file, "/", "", -1)
+//		rv.Oid = file
+		meta, err := a.metaStore.Put(rv)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("MEta", meta)
+	}
+
+	logRequest(r, 200)
+}
+
 
 // GetMetaHandler retrieves metadata about the object
 func (a *App) GetMetaHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -150,22 +149,4 @@ func render(w http.ResponseWriter, tmpl string, data pageData) error {
 	t.New("content").Parse(contentString)
 
 	return t.Execute(w, data)
-}
-
-func authenticate(r *http.Request) error {
-	err := errors.New("Forbidden")
-
-	if Config.AdminUser == "" || Config.AdminPass == "" {
-		return err
-	}
-
-	user, pass, ok := r.BasicAuth()
-	if !ok {
-		return err
-	}
-
-	if user == Config.AdminUser && pass == Config.AdminPass {
-		return nil
-	}
-	return err
 }

@@ -38,6 +38,9 @@ func main() {
 	// get object stuff
 	obj1_data, _ := client.HGet(obj1, "size").Result()
 	fmt.Println("Object1 size", obj1_data)
+	oops, oerr := client.SMembers("objects:notthere").Result()
+	fmt.Println("OOPS", oops)
+	fmt.Println("OOPS ERR", oerr)
 	// get objects belonging to a project
 	prj1_data, _ := client.SMembers("objects:project1").Result()
 	fmt.Printf("%s objects %s\n", "project1", prj1_data)
