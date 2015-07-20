@@ -47,9 +47,9 @@ func (c *Configuration) IsPublic() bool {
 
 // Config is the global app configuration
 //var Config = &Configuration{}
+var GoEnv = os.Getenv("GO_ENV")
 var Config = &Configuration{}
 var RedisConfig = &RedisConfigT{}
-var GoEnv = os.Getenv("GO_ENV")
 
 // iterate thru config.yaml and parse it
 // always called when initializing Config
@@ -83,7 +83,7 @@ func init() {
 func setRedisConfig() *RedisConfigT {
 	_url, err := url.Parse(Config.RedisUrl)
 	perror(err)
-	db, _ := strconv.ParseInt(_url.Path, 0, 0)
+	db, _ := strconv.ParseInt(strings.Replace(_url.Path, "/","", -1), 0, 0)
 	addr := _url.Host
 	var password string
 	var ok bool
