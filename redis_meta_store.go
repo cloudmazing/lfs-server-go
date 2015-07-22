@@ -137,7 +137,7 @@ func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
 func (self *RedisMetaStore) Objects() ([]*MetaObject, error) {
 	client := self.redisService.Client
 	oids, _ := client.SMembers(AllOidsHashName).Result()
-	mus := make([]*MetaObject, len(oids))
+	mus := make([]*MetaObject, 0)
 	for _, oid := range oids {
 		size, _ := client.HGet(oid, "size").Int64()
 		mu := &MetaObject{Oid: oid, Size: size}
