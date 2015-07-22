@@ -95,6 +95,10 @@ func findMetaStore() (GenericMetaStore, error) {
 	case "bolt":
 		m, err := NewMetaStore(Config.MetaDB)
 		return m, err
+	case "cassandra":
+		perror(InitializeCassandra())
+		m, err := NewCassandraMetaStore()
+		return m, err
 	default:
 		m, err := NewMetaStore(Config.MetaDB)
 		return m, err

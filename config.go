@@ -28,6 +28,8 @@ type Configuration struct {
 	BackingStore string `config:"bolt"`
 	LdapServer   string `config:"ldap://localhost:1389"`
 	LdapBase     string `config:"dc=testers,c=test,o=company"`
+	CassandraHosts     string `config:"localhost"` //separated by ","
+	CassandraKeyspace     string `config:"lfs_server_go"`
 }
 
 type RedisConfigT struct {

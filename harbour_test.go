@@ -293,16 +293,16 @@ func TestMediaTypesParsed(t *testing.T) {
 
 var (
 	lfsServer        *httptest.Server
-	testMetaStore    GenericMetaStore
+	testMetaStore GenericMetaStore
 	testContentStore *ContentStore
-	testUser         = "admin"
-	testPass         = "admin"
-	testAuth         = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(testUser+":"+testPass)))
-	badAuth          = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte("azog:defiler")))
-	content          = "this is my content"
-	contentSize      = int64(len(content))
-	contentOid       = "f97e1b2936a56511b3b6efc99011758e4700d60fb1674d31445d1ee40b663f24"
-	nonexistingOid   = "aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+	testUser = "admin"
+	testPass = "admin"
+	testAuth = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(testUser+":"+testPass)))
+	badAuth = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte("azog:defiler")))
+	content = "this is my content"
+	contentSize = int64(len(content))
+	contentOid = "f97e1b2936a56511b3b6efc99011758e4700d60fb1674d31445d1ee40b663f24"
+	nonexistingOid = "aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
 )
 
 func baseUrl() string {
@@ -390,7 +390,51 @@ func TestMain(m *testing.M) {
 	os.Remove("lfs-test.db")
 	os.RemoveAll("lfs-content-test")
 
-	os.Exit(ret1)
+	if ret1 != 0 {
+		os.Exit(ret1)
+	}
+
+	fmt.Println("Starting Cassandra testing")
+	// Start testing redis
+	DropCassandra() // Clean up
+	InitializeCassandra() // Initialize the database
+	// Clear out the database
+	os.RemoveAll("lfs-content-test")
+	testMetaStore, err = NewCassandraMetaStore()
+	if err != nil {
+		fmt.Printf("Error creating meta store: %s", err)
+		os.Exit(1)
+	}
+
+	testContentStore, err = NewContentStore("lfs-content-test")
+	if err != nil {
+		fmt.Printf("Error creating content store: %s", err)
+		os.Exit(1)
+	}
+
+	if err := seedMetaStore(); err != nil {
+		fmt.Printf("Error seeding meta store: %s", err)
+		os.Exit(1)
+	}
+	fmt.Println("Seeded meta store")
+	if err := seedContentStore(); err != nil {
+		fmt.Printf("Error seeding content store: %s", err)
+		os.Exit(1)
+	}
+	fmt.Println("Seeded content store")
+
+	app2 := NewApp(testContentStore, testMetaStore)
+	lfsServer = httptest.NewServer(app2)
+
+	logger = NewKVLogger(ioutil.Discard)
+
+	ret2 := m.Run()
+
+	lfsServer.Close()
+	testMetaStore.Close()
+	os.RemoveAll("lfs-content-test")
+
+	os.Exit(ret2)
 
 }
 
@@ -399,7 +443,7 @@ func seedMetaStore() error {
 		return err
 	}
 
-	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize}
+	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: "repo"}
 	if _, err := testMetaStore.Put(rv); err != nil {
 		return err
 	}

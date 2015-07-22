@@ -17,7 +17,6 @@ type MetaStore struct {
 
 var (
 	errNoBucket       = errors.New("Bucket not found")
-	errObjectNotFound = errors.New("Object not found")
 )
 
 var (
