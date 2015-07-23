@@ -52,7 +52,8 @@ func InitializeCassandra() (error) {
 }
 
 func DropCassandra() (error) {
-	q := fmt.Sprintf("drop keyspace %s;", Config.CassandraKeyspace)
+	m := fmt.Sprintf("%s_%s", Config.CassandraKeyspace, GoEnv)
+	q := fmt.Sprintf("drop keyspace %s;", m)
 	c := NewCassandraSession().Client
 	return c.Query(q).Exec()
 }

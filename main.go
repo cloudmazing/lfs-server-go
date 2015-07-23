@@ -3,9 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/nmcclain/ldap"
 	"net"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,32 +26,6 @@ var (
 // go away.
 type tcpKeepAliveListener struct {
 	*net.TCPListener
-}
-
-func ldapHost() string {
-	_url, err := url.Parse(Config.LdapServer)
-	perror(err)
-	return _url.Host
-}
-
-func LdapSearch(search *ldap.SearchRequest) (*ldap.SearchResult, error) {
-	ldapCon, err := ldap.Dial("tcp", ldapHost())
-	perror(err)
-	defer ldapCon.Close()
-	return ldapCon.Search(search)
-}
-
-// boolean bind request
-func LdapBind(user string, password string) bool {
-	ldapCon, err := ldap.Dial("tcp", ldapHost())
-	perror(err)
-	defer ldapCon.Close()
-	reqE := ldapCon.Bind(user, password)
-	resp := false
-	if reqE == nil {
-		resp = true
-	}
-	return resp
 }
 
 func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {

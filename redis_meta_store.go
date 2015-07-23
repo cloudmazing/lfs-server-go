@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
+	"encoding/base64"
 )
 
 type RedisMetaStore struct {
@@ -28,7 +30,7 @@ func NewRedisMetaStore() (*RedisMetaStore, error) {
 }
 
 func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !authenticate(v.Authorization) {
+	if !self.authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -71,7 +73,7 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 
 func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 
-	if !authenticate(v.Authorization) {
+	if !self.authenticate(v.Authorization) {
 		logger.Log(kv{"fn": "meta_store", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
@@ -129,7 +131,7 @@ func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
 	var mus []*MetaUser
 	users, _ := self.redisService.Client.SMembers(UsersHashName).Result()
 	for _, user := range users {
-		mus = append(mus, &MetaUser{string(user)})
+		mus = append(mus, &MetaUser{Name: string(user)})
 	}
 	return mus, nil
 }
@@ -194,3 +196,43 @@ func (self *RedisMetaStore) findProjectOids(project string) ([]string, error) {
 	return client.SMembers(projectObjectKey(project)).Result()
 }
 
+// authenticate uses the authorization string to determine whether
+// or not to proceed. This server assumes an HTTP Basic auth format.
+func (self *RedisMetaStore) authenticate(authorization string) bool {
+	if Config.IsPublic() {
+		return true
+	}
+
+	if authorization == "" {
+		return false
+	}
+
+	if !strings.HasPrefix(authorization, "Basic ") {
+		return false
+	}
+
+	c, err := base64.URLEncoding.DecodeString(strings.TrimPrefix(authorization, "Basic "))
+	if err != nil {
+		logger.Log(kv{"fn": "redis_meta_store.authenticate", "msg": err.Error()})
+		return false
+	}
+	cs := string(c)
+	i := strings.IndexByte(cs, ':')
+	if i < 0 {
+		return false
+	}
+	user, password := cs[:i], cs[i+1:]
+	if Config.UseLdap == "true" {
+		return authenticateLdap(user, password)
+	}
+
+	mPass, err := self.redisService.Client.HGet(user, "password").Result()
+	if err != nil {
+		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
+		return false
+	}
+	if password != "" && string(mPass) == string(password) {
+		return true
+	}
+	return false
+}

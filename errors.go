@@ -3,6 +3,10 @@ import "errors"
 var (
 	errProjectNotFound = errors.New("Project not found")
 	errObjectNotFound = errors.New("Object not found")
+	errLdapUsertNotFound = errors.New("Unable to find user in LDAP")
+	errUsertNotFound = errors.New("Unable to find user")
+	errNoLdapSearchResults = errors.New("No results from LDAP")
+	errLdapSearchFailed = errors.New("Failed searching LDAP")
 )
 
 func isErrObjectNotFound(err error) bool {

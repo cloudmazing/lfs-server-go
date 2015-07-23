@@ -3,6 +3,8 @@ import (
 	"fmt"
 	"encoding/gob"
 	"bytes"
+	"strings"
+	"encoding/base64"
 )
 
 type CassandraMetaStore struct {
@@ -85,7 +87,7 @@ func (self *CassandraMetaStore) findAllOids() ([]*MetaObject, error) {
 }
 
 func (self *CassandraMetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !authenticate(v.Authorization) {
+	if !self.authenticate(v.Authorization) {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
@@ -114,7 +116,7 @@ func (self *CassandraMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 }
 
 func (self *CassandraMetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !authenticate(v.Authorization) {
+	if !self.authenticate(v.Authorization) {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
@@ -132,13 +134,23 @@ func (self *CassandraMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	return &meta, nil
 }
 
+func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
+	var _user string
+	var pass string
+	itr := self.cassandraService.Client.Query("select username, password from users where username = ? limit 1;", user).Iter()
+	defer itr.Close()
+	for itr.Scan(&_user, &pass) {
+		if _user == "" {return &MetaUser{}, errUsertNotFound}
+		return &MetaUser{Name: _user, Password: pass}, nil
+	}
+	return &MetaUser{}, errUsertNotFound
+}
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
-	var _user string
-	itr := self.cassandraService.Client.Query("select username from users where username = ? limit 1;",user).Iter()
-	defer itr.Close()
-	for itr.Scan(&_user) {
-		if len(_user) > 0 {return nil}
+	u, _ := self.findUser(user)
+	// return nil if the user is already there
+	if u.Name != "" {
+		return nil
 	}
 	err := self.cassandraService.Client.Query("insert into users (username, password) values(?, ?);", user, pass).Exec()
 	return err
@@ -164,12 +176,48 @@ func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
 func (self *CassandraMetaStore) Objects() ([]*MetaObject, error) {
 	ao, err := self.findAllOids()
 	if err != nil {
-		fmt.Println("ERROR:", err)
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
 	}
-	fmt.Println("OIDS", ao)
-	fmt.Println("OIDS length", len(ao))
 	return ao,err
 }
 
 
+func (self *CassandraMetaStore) authenticate(authorization string) bool {
+	if Config.IsPublic() {
+		return true
+	}
+
+	if authorization == "" {
+		return false
+	}
+
+	if !strings.HasPrefix(authorization, "Basic ") {
+		return false
+	}
+
+	c, err := base64.URLEncoding.DecodeString(strings.TrimPrefix(authorization, "Basic "))
+	if err != nil {
+		logger.Log(kv{"fn": "cassandra_meta_store.authenticate", "msg": err.Error()})
+		return false
+	}
+	cs := string(c)
+	i := strings.IndexByte(cs, ':')
+	if i < 0 {
+		return false
+	}
+	user, password := cs[:i], cs[i+1:]
+
+	if Config.UseLdap == "true" {
+		return authenticateLdap(user, password)
+	}
+	mu, err := self.findUser(user)
+	if err != nil {
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
+		return false
+	}
+	if password != "" && mu.Password == password {
+		return true
+	}
+	return false
+}
 

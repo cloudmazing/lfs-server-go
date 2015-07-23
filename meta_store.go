@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"strings"
+	"encoding/base64"
 )
 
 // MetaStore implements a metadata storage. It stores user credentials and Meta information
@@ -49,7 +51,7 @@ func NewMetaStore(dbFile string) (*MetaStore, error) {
 // Get retrieves the Meta information for an object given information in
 // RequestVars
 func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !authenticate(v.Authorization) {
+	if !s.authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -79,7 +81,7 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 
 // Put writes meta information from RequestVars to the store.
 func (s *MetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !authenticate(v.Authorization) {
+	if !s.authenticate(v.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -159,6 +161,7 @@ func (s *MetaStore) DeleteUser(user string) error {
 // MetaUser encapsulates information about a meta store user
 type MetaUser struct {
 	Name string
+	Password string
 }
 
 // Users returns all MetaUsers in the meta store
@@ -172,7 +175,7 @@ func (s *MetaStore) Users() ([]*MetaUser, error) {
 		}
 
 		bucket.ForEach(func(k, v []byte) error {
-			users = append(users, &MetaUser{string(k)})
+			users = append(users, &MetaUser{Name: string(k)})
 			return nil
 		})
 		return nil
@@ -207,3 +210,48 @@ func (s *MetaStore) Objects() ([]*MetaObject, error) {
 	return objects, err
 }
 
+// authenticate uses the authorization string to determine whether
+// or not to proceed. This server assumes an HTTP Basic auth format.
+func (s *MetaStore) authenticate(authorization string) bool {
+	if Config.IsPublic() {
+		return true
+	}
+
+	if authorization == "" {
+		return false
+	}
+
+	if !strings.HasPrefix(authorization, "Basic ") {
+		return false
+	}
+	c, err := base64.URLEncoding.DecodeString(strings.TrimPrefix(authorization, "Basic "))
+	if err != nil {
+		logger.Log(kv{"fn": "meta_store.authenticate", "msg": err.Error()})
+		return false
+	}
+	cs := string(c)
+	i := strings.IndexByte(cs, ':')
+	if i < 0 {
+		return false
+	}
+	user, password := cs[:i], cs[i+1:]
+	if Config.UseLdap == "true" {
+		return authenticateLdap(user, password)
+	}
+	value := ""
+
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(usersBucket)
+		if bucket == nil {
+			return errNoBucket
+		}
+
+		value = string(bucket.Get([]byte(user)))
+		return nil
+	})
+
+	if value != "" && value == password {
+		return true
+	}
+	return false
+}

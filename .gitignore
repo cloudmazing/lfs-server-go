@@ -11,3 +11,4 @@ test_ldap/test_ldap
 log/*
 redis_testing
 test_read_dir
+testing_ldap
