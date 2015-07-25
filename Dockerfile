@@ -1,3 +1,3 @@
 FROM golang:1.4-onbuild
-MAINTAINER GitHub, Inc.
+MAINTAINER Mike Quinn
 EXPOSE 8080
