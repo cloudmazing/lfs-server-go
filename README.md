@@ -9,8 +9,13 @@ LFS Server Go\! is an example server that implements the [Git LFS API][api].
 This is based off of lfs-test-server.  There are a few differences though.  
 
 1. This server uses the same base directory for all objects
-2. The backing store is offloaded to Redis
-3. It will (not yet) allow for object store storage of objects
+1. The backing store is offloaded to 
+  * Redis
+  * BoltDB
+  * Cassandra
+    * TODO: password auth for cassandra
+1. There is a notion of project -\> OID membership, which is lacking from the original.  This is wired up but not yet functional. It will shortly allow for validating a user's membership to a project and the project's associated OID to the user, thus ensuring a user's access to a project will allow for access to an OID
+1. It will (not yet) allow for object store storage of objects
 
 ## Installing
 
@@ -30,6 +35,8 @@ To build from source, use the Go tools:
 
 
 ## Running
+
+<b> Set your GO_ENV. Options are `prod` or `dev` or `test`</b>
 
 Running the binary will start an LFS server on `localhost:8080` by default.
 All of the configuration settings are stored in config.ini.

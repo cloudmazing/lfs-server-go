@@ -1,7 +1,7 @@
 [prod]
 Listen = tcp://:9999
 Host = 127.0.0.1:9999
-ContentPath = lfs_content
+ContentPath = /path/to/some/lfs_content
 AdminUser = admin
 AdminPass = admin
 Cert = mine.crt
@@ -10,22 +10,30 @@ Scheme = https
 Public = true
 MetaDB = lfs.db
 RedisUrl = redis://localhost:6379/0
+LdapServer = ldap://localhost:1389
 
 [dev]
 Listen = tcp://:9999
 Host = 127.0.0.1:9999
-ContentPath = lfs_content
+ContentPath = /path/to/some/lfs_content
 AdminUser = admin
 AdminPass = admin
 Cert = mine.crt
 Key = mine.key
 Scheme = https
-Public = true
+Public = false
 MetaDB = lfs.db
-# Options are redis or bolt - bolt has no external dependencies
-BackingStore = redis
+; BackingStore = cassandra
+BackingStore = bolt
+;BackingStore = redis
 RedisUrl = redis://localhost:6379/0
-
+;LdapServer = ldap://localhost:1389
+; true/false
+UseLdap = true
+LdapBase = ou=people,o=mycompany
+LdapUserObjectClass = person
+LdapUserCn = uid
 [test]
-# Dont put anything else in here
+; Dont put anything else in here
 RedisUrl = redis://localhost:6379/1
+LdapServer = ldap://localhost:1389

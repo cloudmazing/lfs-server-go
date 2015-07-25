@@ -3,6 +3,10 @@
 	"GoVersion": "go1.4.2",
 	"Deps": [
 		{
+			"ImportPath": "github.com/GeertJohan/go.rice",
+			"Rev": "42fe5e1e4e358b413e3e1a7b2243ec8599209107"
+		},
+		{
 			"ImportPath": "github.com/bmizerany/assert",
 			"Comment": "release.r60-6-ge17e998",
 			"Rev": "e17e99893cb6509f428e1728281c2ad60a6b31e3"
@@ -13,12 +17,33 @@
 			"Rev": "550b8c7cb64d61665aefda8dd52ad8c34e725be5"
 		},
 		{
+			"ImportPath": "github.com/daaku/go.zipexe",
+			"Rev": "a5fe2436ffcb3236e175e5149162b41cd28bd27d"
+		},
+		{
+			"ImportPath": "github.com/gocql/gocql",
+			"Comment": "1st_gen_framing-215-g6927712",
+			"Rev": "692771231549a6425d6057d659b679e126405f6f"
+		},
+		{
+			"ImportPath": "github.com/golang/groupcache/lru",
+			"Rev": "604ed5785183e59ae2789449d89e73f3a2a77987"
+		},
+		{
+			"ImportPath": "github.com/golang/snappy",
+			"Rev": "f4b10fa94214ba1b3d4068beeda8f920bf352cf0"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "14f550f51af52180c2eefed15e5fd18d63c0a64a"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "4b8fbc56f3b2400a7c7ea3dba9b3539787c486b6"
+		},
+		{
+			"ImportPath": "github.com/kardianos/osext",
+			"Rev": "8fef92e41e22a70e700a96b29f066cda30ea24ef"
 		},
 		{
 			"ImportPath": "github.com/kr/pretty",
@@ -30,12 +55,12 @@
 			"Rev": "6807e777504f54ad073ecef66747de158294b639"
 		},
 		{
-			"ImportPath": "github.com/nmcclain/asn1-ber",
-			"Rev": "ec51d5ed21377b4023ca7b1e70ae4cb296ee6047"
+			"ImportPath": "github.com/mavricknz/asn1-ber",
+			"Rev": "ce3c3d1d8e4190a390fc72f551222783cbd6e55a"
 		},
 		{
-			"ImportPath": "github.com/nmcclain/ldap",
-			"Rev": "2a93a58a34c92bac004ec9f0bb2e8cdeed583cad"
+			"ImportPath": "github.com/mavricknz/ldap",
+			"Rev": "6638977d26a6bc5ac0d2a9a5dcbefe02c456ea38"
 		},
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",
@@ -49,6 +74,10 @@
 			"ImportPath": "gopkg.in/bufio.v1",
 			"Comment": "v1",
 			"Rev": "567b2bfa514e796916c4747494d6ff5132a1dfce"
+		},
+		{
+			"ImportPath": "gopkg.in/inf.v0",
+			"Rev": "c85f1217d51339c0fa3a498cc8b2075de695dae6"
 		},
 		{
 			"ImportPath": "gopkg.in/redis.v3",

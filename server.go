@@ -117,7 +117,7 @@ func (a *App) GetContentHandler(w http.ResponseWriter, r *http.Request) {
 	rv := unpack(r)
 	meta, err := a.metaStore.Get(rv)
 	if err != nil {
-		fmt.Println(err)
+		logger.Log(kv{"fn":"GetContentHandler", "error":err.Error()})
 		if isAuthError(err) {
 			requireAuth(w, r)
 		} else {
@@ -183,6 +183,7 @@ func (a *App) GetMetaHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) PostHandler(w http.ResponseWriter, r *http.Request) {
 	rv := unpack(r)
 	meta, err := a.metaStore.Put(rv)
+
 	if err != nil {
 		if isAuthError(err) {
 			requireAuth(w, r)
