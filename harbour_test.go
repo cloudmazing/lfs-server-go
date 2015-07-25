@@ -171,7 +171,7 @@ func TestPostAuthedExistingObject(t *testing.T) {
 		t.Fatalf("response error: %s", err)
 	}
 
-	if res.StatusCode < 200 || res.StatusCode > 202 {
+	if res.StatusCode != 200 {
 		t.Fatalf("expected status 200, got %d", res.StatusCode)
 	}
 
