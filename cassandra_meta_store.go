@@ -1,10 +1,11 @@
 package main
+
 import (
-	"fmt"
-	"encoding/gob"
 	"bytes"
-	"strings"
 	"encoding/base64"
+	"encoding/gob"
+	"fmt"
+	"strings"
 )
 
 type CassandraMetaStore struct {
@@ -19,29 +20,29 @@ func (self *CassandraMetaStore) Close() {
 	return
 }
 
-func (self *CassandraMetaStore) createProject(project string) (error) {
+func (self *CassandraMetaStore) createProject(project string) error {
 	q := fmt.Sprintf("insert into projects (name) values('%s');", project)
 	err := self.cassandraService.Client.Query(q).Exec()
 	return err
 }
 
-func (self *CassandraMetaStore) addOidToProject(oid string, project string) (error) {
+func (self *CassandraMetaStore) addOidToProject(oid string, project string) error {
 	q := fmt.Sprintf("update projects set oids = oids + {'%s'} where name = '%s';", oid, project)
 	err := self.cassandraService.Client.Query(q).Exec()
 	return err
 }
 
-func (self *CassandraMetaStore) createOid(oid string, size int64) (error) {
+func (self *CassandraMetaStore) createOid(oid string, size int64) error {
 	q := fmt.Sprintf("insert into oids (oid, size) values ('%s', %d);", oid, size)
 	return self.cassandraService.Client.Query(q).Exec()
 }
 
-func (self *CassandraMetaStore) removeOid(oid string) (error) {
+func (self *CassandraMetaStore) removeOid(oid string) error {
 	q := fmt.Sprintf("select project from projects where oids contains '%s';", oid)
 	return self.cassandraService.Client.Query(q).Exec()
 }
 
-func (self *CassandraMetaStore) removeProject(v *RequestVars) (error) {
+func (self *CassandraMetaStore) removeProject(v *RequestVars) error {
 	q := fmt.Sprintf("delete from projects where name = '%s;", v.Repo)
 	return self.cassandraService.Client.Query(q).Exec()
 }
@@ -55,7 +56,9 @@ func (self *CassandraMetaStore) findProject(projectName string) (string, error) 
 	defer itr.Close()
 	var project string
 	for itr.Scan(&project) {
-		if project == "" {return "", errProjectNotFound}
+		if project == "" {
+			return "", errProjectNotFound
+		}
 		return project, nil
 	}
 	return "", errProjectNotFound
@@ -68,7 +71,9 @@ func (self *CassandraMetaStore) findOid(oid string) (*MetaObject, error) {
 	var size int64
 	var lOid string
 	for itr.Scan(&lOid, &size) {
-		if lOid == "" {return nil, errObjectNotFound}
+		if lOid == "" {
+			return nil, errObjectNotFound
+		}
 		return &MetaObject{Oid: lOid, Size: size}, nil
 	}
 	return nil, errObjectNotFound
@@ -140,11 +145,14 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 	itr := self.cassandraService.Client.Query("select username, password from users where username = ? limit 1;", user).Iter()
 	defer itr.Close()
 	for itr.Scan(&_user, &pass) {
-		if _user == "" {return &MetaUser{}, errUsertNotFound}
+		if _user == "" {
+			return &MetaUser{}, errUsertNotFound
+		}
 		return &MetaUser{Name: _user, Password: pass}, nil
 	}
 	return &MetaUser{}, errUsertNotFound
 }
+
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	u, _ := self.findUser(user)
@@ -163,7 +171,7 @@ func (self *CassandraMetaStore) DeleteUser(user string) error {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
-	users := make([]*MetaUser,0)
+	users := make([]*MetaUser, 0)
 	itr := self.cassandraService.Client.Query("select username from users;").Iter()
 	defer itr.Close()
 	var username string
@@ -178,9 +186,8 @@ func (self *CassandraMetaStore) Objects() ([]*MetaObject, error) {
 	if err != nil {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
 	}
-	return ao,err
+	return ao, err
 }
-
 
 func (self *CassandraMetaStore) authenticate(authorization string) bool {
 	if Config.IsPublic() {
@@ -220,4 +227,3 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 	}
 	return false
 }
-

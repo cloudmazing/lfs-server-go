@@ -1,7 +1,8 @@
 package main
+
 import (
-	"github.com/gocql/gocql"
 	"fmt"
+	"github.com/gocql/gocql"
 )
 
 type CassandraService struct {
@@ -24,7 +25,7 @@ func NewCassandraSession() *CassandraService {
 	return &CassandraService{Client: session}
 }
 
-func createCassandraKeyspace() (error) {
+func createCassandraKeyspace() error {
 	cluster := gocql.NewCluster(Config.CassandraHosts)
 	q := fmt.Sprintf("create keyspace if not exists %s_%s with replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };", Config.CassandraKeyspace, GoEnv)
 	c, err := cluster.CreateSession()
@@ -32,7 +33,7 @@ func createCassandraKeyspace() (error) {
 	defer c.Close()
 	return err
 }
-func InitializeCassandra() (error) {
+func InitializeCassandra() error {
 	//	cs := gocql.NewCluster(Config.CassandraHosts)
 	c := NewCassandraSession().Client
 	createCassandraKeyspace()
@@ -51,7 +52,7 @@ func InitializeCassandra() (error) {
 	return nil
 }
 
-func DropCassandra() (error) {
+func DropCassandra() error {
 	m := fmt.Sprintf("%s_%s", Config.CassandraKeyspace, GoEnv)
 	q := fmt.Sprintf("drop keyspace %s;", m)
 	c := NewCassandraSession().Client

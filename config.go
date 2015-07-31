@@ -33,6 +33,12 @@ type Configuration struct {
 	LdapUserCn          string `config:"uid"`
 	CassandraHosts      string `config:"localhost"` //separated by ","
 	CassandraKeyspace   string `config:"lfs_server_go"`
+	AwsAccessKeyId      string `config:""`
+	AwsSecretAccessKey  string `config:""`
+	AwsRegion           string `config:"USWest"`
+	AwsBucketName       string `config:"lfs-server-go-objects"`
+	AwsBucketAcl        string `config:"bucket-owner-full-control"`
+	ContentStore        string `config:"filesystem"`
 }
 
 type RedisConfigT struct {

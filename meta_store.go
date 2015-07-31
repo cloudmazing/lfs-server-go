@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
+	"encoding/base64"
 	"github.com/boltdb/bolt"
 	"strings"
-	"encoding/base64"
 )
 
 // MetaStore implements a metadata storage. It stores user credentials and Meta information
@@ -18,7 +18,7 @@ type MetaStore struct {
 }
 
 var (
-	errNoBucket       = errors.New("Bucket not found")
+	errNoBucket = errors.New("Bucket not found")
 )
 
 var (
@@ -160,7 +160,7 @@ func (s *MetaStore) DeleteUser(user string) error {
 
 // MetaUser encapsulates information about a meta store user
 type MetaUser struct {
-	Name string
+	Name     string
 	Password string
 }
 

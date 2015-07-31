@@ -77,6 +77,16 @@ func findMetaStore() (GenericMetaStore, error) {
 	}
 }
 
+func findContentStore() (GenericContentStore, error) {
+	switch Config.ContentStore {
+	case "filestore":
+		return NewContentStore(Config.ContentPath)
+	case "aws":
+		return NewAwsContentStore()
+	default:
+		return NewContentStore(Config.ContentPath)
+	}
+}
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "-v" {
 		fmt.Println(version)
@@ -105,7 +115,7 @@ func main() {
 		logger.Fatal(kv{"fn": "main", "err": "Could not open the meta store: " + err.Error()})
 	}
 
-	contentStore, err := NewContentStore(Config.ContentPath)
+	contentStore, err := findContentStore()
 	if err != nil {
 		logger.Fatal(kv{"fn": "main", "err": "Could not open the content store: " + err.Error()})
 	}

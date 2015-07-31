@@ -1,12 +1,13 @@
 package main
+
 import (
-	"errors"
-	"github.com/mavricknz/ldap"
 	"crypto/tls"
+	"errors"
 	"fmt"
-	"strings"
-	"strconv"
+	"github.com/mavricknz/ldap"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 func ldapHost() *url.URL {

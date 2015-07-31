@@ -1,11 +1,12 @@
 package main
+
 import (
-	"encoding/gob"
 	"bytes"
+	"encoding/base64"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"strings"
-	"encoding/base64"
 )
 
 type RedisMetaStore struct {
@@ -13,10 +14,9 @@ type RedisMetaStore struct {
 }
 
 var (
-	errNoRedisProject = errors.New("Project not found in redis")
+	errNoRedisProject      = errors.New("Project not found in redis")
 	errRedisObjectNotFound = errors.New("Object not found in redis")
 )
-
 
 const OidHashName = "lfs-meta:project:oids"
 const ProjectsHashName = "lfs-meta:projects"
@@ -152,7 +152,10 @@ func (self *RedisMetaStore) Objects() ([]*MetaObject, error) {
 // Check the oid list for a given oid
 func exists(s string, l []string) bool {
 	for _, t := range l {
-		if s == t {fmt.Sprintf("Found %s in %v\n", s, l); return true}
+		if s == t {
+			fmt.Sprintf("Found %s in %v\n", s, l)
+			return true
+		}
 	}
 	return false
 }
@@ -177,7 +180,7 @@ func isErrRedisObjectNotFound(err error) bool {
 	return false
 }
 
-func projectObjectKey(repo string) (string) {
+func projectObjectKey(repo string) string {
 	return fmt.Sprintf("%s:%s", OidHashName, repo)
 }
 
@@ -186,7 +189,9 @@ func (self *RedisMetaStore) findProject(v *RequestVars) (string, error) {
 	projects, perr := client.SMembers(ProjectsHashName).Result()
 	perror(perr)
 	for _, p := range projects {
-		if p == v.Repo {return p, nil}
+		if p == v.Repo {
+			return p, nil
+		}
 	}
 	return "", errNoRedisProject
 }

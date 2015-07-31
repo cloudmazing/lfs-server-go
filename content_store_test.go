@@ -10,7 +10,7 @@ import (
 
 var contentStore *ContentStore
 
-func TestContenStorePut(t *testing.T) {
+func TestContentStorePut(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -31,7 +31,7 @@ func TestContenStorePut(t *testing.T) {
 	}
 }
 
-func TestContenStorePutHashMismatch(t *testing.T) {
+func TestContentStorePutHashMismatch(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -52,7 +52,7 @@ func TestContenStorePutHashMismatch(t *testing.T) {
 	}
 }
 
-func TestContenStorePutSizeMismatch(t *testing.T) {
+func TestContentStorePutSizeMismatch(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -73,7 +73,7 @@ func TestContenStorePutSizeMismatch(t *testing.T) {
 	}
 }
 
-func TestContenStoreGet(t *testing.T) {
+func TestContentStoreGet(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -99,7 +99,7 @@ func TestContenStoreGet(t *testing.T) {
 	}
 }
 
-func TestContenStoreGetNonExisting(t *testing.T) {
+func TestContentStoreGetNonExisting(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -109,7 +109,7 @@ func TestContenStoreGetNonExisting(t *testing.T) {
 	}
 }
 
-func TestContenStoreExists(t *testing.T) {
+func TestContentStoreExists(t *testing.T) {
 	setup()
 	defer teardown()
 

@@ -54,6 +54,12 @@ type GenericMetaStore interface {
 	Objects() ([]*MetaObject, error)
 }
 
+type GenericContentStore interface {
+	Get(meta *MetaObject) (io.Reader, error)
+	Put(meta *MetaObject, r io.Reader) error
+	Exists(meta *MetaObject) bool
+}
+
 // ObjectLink builds a URL linking to the object.
 func (v *RequestVars) ObjectLink() string {
 	path := fmt.Sprintf("/%s/%s/objects/%s", v.User, v.Repo, v.Oid)
@@ -74,12 +80,12 @@ type link struct {
 // App links a Router, ContentStore, and MetaStore to provide the LFS server.
 type App struct {
 	router       *mux.Router
-	contentStore *ContentStore
+	contentStore GenericContentStore
 	metaStore    GenericMetaStore
 }
 
 // NewApp creates a new App using the ContentStore and MetaStore provided
-func NewApp(content *ContentStore, meta GenericMetaStore) *App {
+func NewApp(content GenericContentStore, meta GenericMetaStore) *App {
 	app := &App{contentStore: content, metaStore: meta}
 
 	r := mux.NewRouter()
@@ -117,7 +123,7 @@ func (a *App) GetContentHandler(w http.ResponseWriter, r *http.Request) {
 	rv := unpack(r)
 	meta, err := a.metaStore.Get(rv)
 	if err != nil {
-		logger.Log(kv{"fn":"GetContentHandler", "error":err.Error()})
+		logger.Log(kv{"fn": "GetContentHandler", "error": err.Error()})
 		if isAuthError(err) {
 			requireAuth(w, r)
 		} else {
@@ -147,7 +153,7 @@ func readDir(path string) []string {
 		if !bl.IsDir() {
 			files = append(files, bl.Name())
 		} else {
-			nd := fmt.Sprintf("%s", path + "/" + bl.Name())
+			nd := fmt.Sprintf("%s", path+"/"+bl.Name())
 			for _, x := range readDir(nd) {
 				files = append(files, fmt.Sprintf("%s/%s", bl.Name(), x))
 			}

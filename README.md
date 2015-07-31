@@ -1,6 +1,6 @@
 LFS Server Go\!
 ======
-### TESTING ONLY AT THIS TIME ###
+
 [lfs]: https://github.com/github/git-lfs
 [api]: https://github.com/github/git-lfs/blob/master/docs/api.md
 
