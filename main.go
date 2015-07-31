@@ -13,7 +13,7 @@ import (
 const (
 	contentMediaType = "application/vnd.git-lfs"
 	metaMediaType    = contentMediaType + "+json"
-	version          = "0.2.1"
+	version          = "0.1.0"
 )
 
 var (
@@ -80,10 +80,13 @@ func findMetaStore() (GenericMetaStore, error) {
 func findContentStore() (GenericContentStore, error) {
 	switch Config.ContentStore {
 	case "filestore":
+		fmt.Println("Using ContentStore", Config.ContentStore)
 		return NewContentStore(Config.ContentPath)
 	case "aws":
+		fmt.Println("Using ContentStore", Config.ContentStore)
 		return NewAwsContentStore()
 	default:
+		fmt.Println("ContentStore not set, using default", Config.ContentStore)
 		return NewContentStore(Config.ContentPath)
 	}
 }
