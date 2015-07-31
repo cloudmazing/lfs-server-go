@@ -12,3 +12,4 @@ log/*
 redis_testing
 test_read_dir
 testing_ldap
+aws_testing
