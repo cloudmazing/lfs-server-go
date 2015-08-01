@@ -82,8 +82,8 @@ func authenticateLdap(user, password string) bool {
 
 func findUserDn(user string) (string, error) {
 	fltr := fmt.Sprintf("(&(objectClass=%s)(%s=%s))", Config.LdapUserObjectClass, Config.LdapUserCn, user)
-//	m := fmt.Sprintf("LDAP Search Host '%s' Filter '%s' base '%s'\n", ldapHost().String(), fltr, Config.LdapBase)
-//	logger.Log(kv{"fn": "meta_store_auth.findUserDn", "msg": m})
+	//	m := fmt.Sprintf("LDAP Search Host '%s' Filter '%s' base '%s'\n", ldapHost().String(), fltr, Config.LdapBase)
+	//	logger.Log(kv{"fn": "meta_store_auth.findUserDn", "msg": m})
 	base := fmt.Sprintf("%s=%s,%s", Config.LdapUserCn, user, Config.LdapBase)
 	search := &ldap.SearchRequest{
 		BaseDN: base,
@@ -95,7 +95,7 @@ func findUserDn(user string) (string, error) {
 		return "", err
 	}
 	if len(r.Entries) > 0 {
-//		logger.Log(kv{"fn": "meta_store_auth.findUserDn", "Found DN": r.Entries[0].DN})
+		//		logger.Log(kv{"fn": "meta_store_auth.findUserDn", "Found DN": r.Entries[0].DN})
 		return r.Entries[0].DN, nil
 	}
 	return "", errLdapUsertNotFound
