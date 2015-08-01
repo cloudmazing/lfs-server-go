@@ -1,5 +1,9 @@
 package main
 
+/*
+Downloader implements a service call to an external entity that will respond with a boolean response
+to allow/disallow a user to access a given project's objects
+ */
 import (
 	"io/ioutil"
 	"net/http"

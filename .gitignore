@@ -7,9 +7,10 @@ config.yaml
 *.crt
 *.key
 lfs-content
-test_ldap/test_ldap
+test_ldap_server/test_ldap_server
 log/*
 redis_testing
 test_read_dir
 testing_ldap
 aws_testing
+lfs-content-test/

@@ -294,7 +294,7 @@ func TestMediaTypesParsed(t *testing.T) {
 var (
 	lfsServer        *httptest.Server
 	testMetaStore    GenericMetaStore
-	testContentStore *ContentStore
+	testContentStore GenericContentStore
 	testUser         = "admin"
 	testPass         = "admin"
 	testAuth         = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(testUser+":"+testPass)))
@@ -346,95 +346,7 @@ func TestMain(m *testing.M) {
 	testMetaStore.Close()
 	os.Remove("lfs-test.db")
 	os.RemoveAll("lfs-content-test")
-	if ret != 0 {
-		os.Exit(ret)
-	}
-	fmt.Println("Starting redis testing")
-	// Start testing redis
-	testMetaStore, err = NewRedisMetaStore()
-	// Clear out the database
-	NewRedisClient().Client.FlushDb().Result()
-	os.Remove("lfs-test.db")
-	os.RemoveAll("lfs-content-test")
-	if err != nil {
-		fmt.Printf("Error creating meta store: %s", err)
-		os.Exit(1)
-	}
-
-	testContentStore, err = NewContentStore("lfs-content-test")
-	if err != nil {
-		fmt.Printf("Error creating content store: %s", err)
-		os.Exit(1)
-	}
-
-	if err := seedMetaStore(); err != nil {
-		fmt.Printf("Error seeding meta store: %s", err)
-		os.Exit(1)
-	}
-	fmt.Println("Seeded meta store")
-	if err := seedContentStore(); err != nil {
-		fmt.Printf("Error seeding content store: %s", err)
-		os.Exit(1)
-	}
-	fmt.Println("Seeded content store")
-
-	app1 := NewApp(testContentStore, testMetaStore)
-	lfsServer = httptest.NewServer(app1)
-
-	logger = NewKVLogger(ioutil.Discard)
-
-	ret1 := m.Run()
-
-	lfsServer.Close()
-	testMetaStore.Close()
-	os.Remove("lfs-test.db")
-	os.RemoveAll("lfs-content-test")
-
-	if ret1 != 0 {
-		os.Exit(ret1)
-	}
-
-	fmt.Println("Starting Cassandra testing")
-	// Start testing redis
-	DropCassandra()       // Clean up
-	InitializeCassandra() // Initialize the database
-	// Clear out the database
-	os.RemoveAll("lfs-content-test")
-	testMetaStore, err = NewCassandraMetaStore()
-	if err != nil {
-		fmt.Printf("Error creating meta store: %s", err)
-		os.Exit(1)
-	}
-
-	testContentStore, err = NewContentStore("lfs-content-test")
-	if err != nil {
-		fmt.Printf("Error creating content store: %s", err)
-		os.Exit(1)
-	}
-
-	if err := seedMetaStore(); err != nil {
-		fmt.Printf("Error seeding meta store: %s", err)
-		os.Exit(1)
-	}
-	fmt.Println("Seeded meta store")
-	if err := seedContentStore(); err != nil {
-		fmt.Printf("Error seeding content store: %s", err)
-		os.Exit(1)
-	}
-	fmt.Println("Seeded content store")
-
-	app2 := NewApp(testContentStore, testMetaStore)
-	lfsServer = httptest.NewServer(app2)
-
-	logger = NewKVLogger(ioutil.Discard)
-
-	ret2 := m.Run()
-
-	lfsServer.Close()
-	testMetaStore.Close()
-	os.RemoveAll("lfs-content-test")
-
-	os.Exit(ret2)
+	os.Exit(ret)
 
 }
 
