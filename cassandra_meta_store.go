@@ -17,6 +17,7 @@ func NewCassandraMetaStore() (*CassandraMetaStore, error) {
 }
 
 func (self *CassandraMetaStore) Close() {
+	defer self.cassandraService.Client.Close()
 	return
 }
 

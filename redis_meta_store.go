@@ -104,6 +104,7 @@ func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 }
 
 func (self *RedisMetaStore) Close() {
+	defer self.redisService.Client.Close()
 	return
 }
 
