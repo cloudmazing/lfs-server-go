@@ -4,9 +4,9 @@ export GO_ENV=test
 cd $(dirname $0)/../
 if [[ ! "`ps -ef | grep '[t]est_ldap'`" ]] ; then
   echo "Starting LDAP server"
-  cd test_ldap
+  cd test_ldap_server
   go build
-  ./test_ldap >> ../log/ldap_test.log 2>&1 &
+  ./test_ldap_server >> ../log/ldap_test.log 2>&1 &
   ldap_pid=$!
   cd -
 fi
