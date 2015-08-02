@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 )
 
 // declare the type of UserAccessGetter
@@ -50,9 +49,11 @@ func (us *UserService) vetAction() bool {
 func NewUserService(base string, username string, project string, action string) *UserService {
 	url := fmt.Sprintf("%s?username=%s&project=%s&action=%s", base, username, project, action)
 	us := &UserService{Downloader: NewDownloader(url), Username: username, Project: project, Action: action}
+	// This is only here for testing until i figure a better way
+	// TODO: Find a way to stub this without the ghetto "Filled" hack
 	us.UserAccessResponse = &UserAccessResponse{Filled: false}
 	if us.vetAction() != true {
-		log.Println(action, "is not in AllowedActions")
+		logger.Log(kv{"fn": "NewUserService","action":fmt.Sprintf("%s is not in AllowedActions", action)})
 		us.UserAccessResponse.Message = fmt.Sprintf("%s is not in AllowedActions", us.Action)
 	}
 	return us
