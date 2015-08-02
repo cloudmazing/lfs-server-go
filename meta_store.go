@@ -22,8 +22,9 @@ var (
 )
 
 var (
-	usersBucket   = []byte("users")
-	objectsBucket = []byte("objects")
+	usersBucket    = []byte("users")
+	objectsBucket  = []byte("objects")
+	projectsBucket = []byte("projects")
 )
 
 // NewMetaStore creates a new MetaStore using the boltdb database at dbFile.
@@ -42,6 +43,10 @@ func NewMetaStore(dbFile string) (*MetaStore, error) {
 			return err
 		}
 
+		if _, err := tx.CreateBucketIfNotExists(projectsBucket); err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -50,8 +55,8 @@ func NewMetaStore(dbFile string) (*MetaStore, error) {
 
 // Get retrieves the Meta information for an object given information in
 // RequestVars
-func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !s.authenticate(v.Authorization) {
+func (s *MetaStore) Get(rv *RequestVars) (*MetaObject, error) {
+	if !s.authenticate(rv.Authorization) {
 		return nil, newAuthError()
 	}
 
@@ -62,7 +67,7 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 			return errNoBucket
 		}
 
-		value := bucket.Get([]byte(v.Oid))
+		value := bucket.Get([]byte(rv.Oid))
 		if len(value) == 0 {
 			return errObjectNotFound
 		}
@@ -80,20 +85,20 @@ func (s *MetaStore) Get(v *RequestVars) (*MetaObject, error) {
 }
 
 // Put writes meta information from RequestVars to the store.
-func (s *MetaStore) Put(v *RequestVars) (*MetaObject, error) {
-	if !s.authenticate(v.Authorization) {
+func (s *MetaStore) Put(rv *RequestVars) (*MetaObject, error) {
+	if !s.authenticate(rv.Authorization) {
 		return nil, newAuthError()
 	}
 
 	// Check if it exists first
-	if meta, err := s.Get(v); err == nil {
+	if meta, err := s.Get(rv); err == nil {
 		meta.Existing = true
 		return meta, nil
 	}
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: v.Oid, Size: v.Size}
+	meta := MetaObject{Oid: rv.Oid, Size: rv.Size}
 	err := enc.Encode(meta)
 	if err != nil {
 		return nil, err
@@ -105,7 +110,7 @@ func (s *MetaStore) Put(v *RequestVars) (*MetaObject, error) {
 			return errNoBucket
 		}
 
-		err = bucket.Put([]byte(v.Oid), buf.Bytes())
+		err = bucket.Put([]byte(rv.Oid), buf.Bytes())
 		if err != nil {
 			return err
 		}

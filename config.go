@@ -112,16 +112,12 @@ func setRedisConfig() *RedisConfigT {
 	return &RedisConfigT{Addr: addr, DB: db, Password: password}
 }
 
-func dumpConfig() {
-	file, err := ini.LoadFile("config.ini")
-	if err != nil {
-		panic(fmt.Sprint("unable to read config.ini, %v", err))
+func (c *Configuration) DumpConfig() map[string]string {
+	configDump := make(map[string]string)
+	for name, _ := range attributes(&Configuration{}) {
+		valueE := reflect.ValueOf(Config).Elem()
+		field := valueE.FieldByName(name)
+		configDump[name] = field.String()
 	}
-	for name, section := range file {
-		fmt.Printf("Section %s, name: %s\n", section, name)
-		for subname := range section {
-			fmt.Printf("Subname: %s\n", subname)
-		}
-	}
-
+	return configDump
 }

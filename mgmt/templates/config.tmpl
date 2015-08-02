@@ -20,4 +20,17 @@
 </code>
 </pre>
 {{end}}
+
+<div class="container">
+Config<br>
+  <table>
+  {{range $k,$v := .ConfigDump}}
+    <tr>
+      <td>{{$k}}</td>
+      <td>{{$v}}</td>
+    </tr>
+  {{end}}
+  </table>
+</div>
+
 </div>

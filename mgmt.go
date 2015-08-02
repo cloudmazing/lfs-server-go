@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-
 	"github.com/GeertJohan/go.rice"
 	"github.com/gorilla/mux"
 )
@@ -16,10 +15,11 @@ var (
 )
 
 type pageData struct {
-	Name    string
-	Config  *Configuration
-	Users   []*MetaUser
-	Objects []*MetaObject
+	Name       string
+	Config     *Configuration
+	ConfigDump map[string]string
+	Users      []*MetaUser
+	Objects    []*MetaObject
 }
 
 func (a *App) addMgmt(r *mux.Router) {
@@ -74,7 +74,7 @@ func basicAuth(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
-	if err := render(w, "config.tmpl", pageData{Name: "index", Config: Config}); err != nil {
+	if err := render(w, "config.tmpl", pageData{Name: "index", Config: Config, ConfigDump: Config.DumpConfig()}); err != nil {
 		writeStatus(w, r, 404)
 	}
 }
