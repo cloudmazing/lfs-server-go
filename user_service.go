@@ -25,6 +25,11 @@ type UserAccessResponse struct {
 	Filled      bool
 }
 
+type UserServiceAuth struct {
+	Username string
+	Password string
+}
+
 type UserService struct {
 	Downloader                *Downloader
 	Username, Project, Action string

@@ -9,11 +9,6 @@ import (
 	"net/http"
 )
 
-type UserServiceAuth struct {
-	Username string
-	Password string
-}
-
 type Downloader struct {
 	Auth     *UserServiceAuth
 	Url      string
