@@ -110,6 +110,9 @@ func (self *RedisMetaStore) Close() {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) DeleteUser(user string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	client := self.redisService.Client
 	// Delete the user records
 	client.HDel(user, "username").Result()
@@ -120,6 +123,9 @@ func (self *RedisMetaStore) DeleteUser(user string) error {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) AddUser(user, pass string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	self.redisService.Client.HSet(user, UsernameKey, user).Result()
 	// TODO: do something with the responses
 	self.redisService.Client.HSet(user, PasswordKey, pass).Result()
@@ -129,6 +135,9 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
+	if Config.UsingLdap() {
+		return []*MetaUser{}, nil
+	}
 	var mus []*MetaUser
 	users, _ := self.redisService.Client.SMembers(UsersHashName).Result()
 	for _, user := range users {
@@ -228,7 +237,7 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 		return false
 	}
 	user, password := cs[:i], cs[i+1:]
-	if Config.UseLdap == "true" {
+	if Config.UsingLdap() {
 		return authenticateLdap(user, password)
 	}
 

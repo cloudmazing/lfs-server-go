@@ -127,6 +127,9 @@ func (s *MetaStore) Close() {
 
 // AddUser adds user credentials to the meta store.
 func (s *MetaStore) AddUser(user, pass string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(usersBucket)
 		if bucket == nil {
@@ -145,6 +148,9 @@ func (s *MetaStore) AddUser(user, pass string) error {
 
 // DeleteUser removes user credentials from the meta store.
 func (s *MetaStore) DeleteUser(user string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(usersBucket)
 		if bucket == nil {
@@ -166,6 +172,9 @@ type MetaUser struct {
 
 // Users returns all MetaUsers in the meta store
 func (s *MetaStore) Users() ([]*MetaUser, error) {
+	if Config.UsingLdap() {
+		return []*MetaUser{}, nil
+	}
 	var users []*MetaUser
 
 	err := s.db.View(func(tx *bolt.Tx) error {
@@ -235,7 +244,7 @@ func (s *MetaStore) authenticate(authorization string) bool {
 		return false
 	}
 	user, password := cs[:i], cs[i+1:]
-	if Config.UseLdap == "true" {
+	if Config.UsingLdap() {
 		return authenticateLdap(user, password)
 	}
 	value := ""

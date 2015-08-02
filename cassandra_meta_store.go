@@ -156,6 +156,9 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	u, _ := self.findUser(user)
 	// return nil if the user is already there
 	if u.Name != "" {
@@ -167,11 +170,17 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) DeleteUser(user string) error {
+	if Config.UsingLdap() {
+		return nil
+	}
 	return self.cassandraService.Client.Query("delete from users where username = ?;", user).Exec()
 }
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
+	if Config.UsingLdap() {
+		return []*MetaUser{}, nil
+	}
 	users := make([]*MetaUser, 0)
 	itr := self.cassandraService.Client.Query("select username from users;").Iter()
 	defer itr.Close()
@@ -215,7 +224,7 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 	}
 	user, password := cs[:i], cs[i+1:]
 
-	if Config.UseLdap == "true" {
+	if Config.UsingLdap() {
 		return authenticateLdap(user, password)
 	}
 	mu, err := self.findUser(user)

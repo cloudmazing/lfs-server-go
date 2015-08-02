@@ -56,6 +56,11 @@ func (c *Configuration) IsPublic() bool {
 	return t
 }
 
+func (c *Configuration) UsingLdap() bool {
+	t, _ := strconv.ParseBool(Config.UseLdap)
+	return t
+}
+
 // Config is the global app configuration
 //var Config = &Configuration{}
 var GoEnv = os.Getenv("GO_ENV")
