@@ -111,7 +111,7 @@ func (self *RedisMetaStore) Close() {
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) DeleteUser(user string) error {
 	if Config.UsingLdap() {
-		return nil
+		return errNotImplemented
 	}
 	client := self.redisService.Client
 	// Delete the user records
@@ -124,7 +124,7 @@ func (self *RedisMetaStore) DeleteUser(user string) error {
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) AddUser(user, pass string) error {
 	if Config.UsingLdap() {
-		return nil
+		return errNotImplemented
 	}
 	self.redisService.Client.HSet(user, UsernameKey, user).Result()
 	// TODO: do something with the responses
@@ -136,7 +136,7 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
 	if Config.UsingLdap() {
-		return []*MetaUser{}, nil
+		return []*MetaUser{}, errNotImplemented
 	}
 	var mus []*MetaUser
 	users, _ := self.redisService.Client.SMembers(UsersHashName).Result()
@@ -250,4 +250,8 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 		return true
 	}
 	return false
+}
+
+func (self *RedisMetaStore) Projects() ([]*MetaProject, error) {
+	return []*MetaProject{}, nil
 }

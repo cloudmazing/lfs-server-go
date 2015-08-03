@@ -31,9 +31,16 @@ type BatchVars struct {
 
 // MetaObject is object metadata as seen by the object and metadata stores.
 type MetaObject struct {
-	Oid      string `json:"oid"`
-	Size     int64  `json:"size"`
-	Existing bool
+	Oid          string   `json:"oid"`
+	Size         int64    `json:"size"`
+	ProjectNames []string `json:"project_names"`
+	Existing     bool
+}
+
+// MetaProject is project metadata
+type MetaProject struct {
+	Name string   `json:"name"`
+	Oids []string `json:"oids"`
 }
 
 // Representation is object metadata as seen by clients of the lfs server.
@@ -52,6 +59,7 @@ type GenericMetaStore interface {
 	AddUser(user, pass string) error
 	Users() ([]*MetaUser, error)
 	Objects() ([]*MetaObject, error)
+	Projects() ([]*MetaProject, error)
 }
 
 type GenericContentStore interface {

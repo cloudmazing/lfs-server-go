@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/GeertJohan/go.rice"
+	"github.com/gorilla/mux"
 	"html/template"
 	"io"
 	"net/http"
-	"github.com/GeertJohan/go.rice"
-	"github.com/gorilla/mux"
 )
 
 var (
 	cssBox      *rice.Box
+	jsBox      *rice.Box
 	templateBox *rice.Box
 )
 
@@ -20,18 +21,22 @@ type pageData struct {
 	ConfigDump map[string]string
 	Users      []*MetaUser
 	Objects    []*MetaObject
+	Projects   []*MetaProject
 }
 
 func (a *App) addMgmt(r *mux.Router) {
 	r.HandleFunc("/mgmt", basicAuth(a.indexHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/objects", basicAuth(a.objectsHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/projects", basicAuth(a.projectsHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
 	r.HandleFunc("/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
 
 	cssBox = rice.MustFindBox("mgmt/css")
+	jsBox = rice.MustFindBox("mgmt/js")
 	templateBox = rice.MustFindBox("mgmt/templates")
 	r.HandleFunc("/mgmt/css/{file}", basicAuth(cssHandler))
+	r.HandleFunc("/mgmt/js/{file}", basicAuth(jsHandler))
 }
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +48,20 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/css")
+
+	io.Copy(w, f)
+	f.Close()
+}
+
+func jsHandler(w http.ResponseWriter, r *http.Request) {
+	file := mux.Vars(r)["file"]
+	f, err := jsBox.Open(file)
+	if err != nil {
+		writeStatus(w, r, 404)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/javascript")
 
 	io.Copy(w, f)
 	f.Close()
@@ -87,6 +106,18 @@ func (a *App) objectsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := render(w, "objects.tmpl", pageData{Name: "objects", Objects: objects}); err != nil {
+		writeStatus(w, r, 404)
+	}
+}
+
+func (a *App) projectsHandler(w http.ResponseWriter, r *http.Request) {
+	projects, err := a.metaStore.Projects()
+	if err != nil {
+		fmt.Fprintf(w, "Error retrieving objects: %s", err)
+		return
+	}
+
+	if err := render(w, "projects.tmpl", pageData{Name: "projects", Projects: projects}); err != nil {
 		writeStatus(w, r, 404)
 	}
 }

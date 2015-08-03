@@ -92,6 +92,18 @@ func (self *CassandraMetaStore) findAllOids() ([]*MetaObject, error) {
 	return oid_list, nil
 }
 
+func (self *CassandraMetaStore) findAllProjects() ([]*MetaProject, error) {
+	itr := self.cassandraService.Client.Query("select name, oids from projects;").Iter()
+	var oids []string
+	var name string
+	project_list := make([]*MetaProject, 0)
+	for itr.Scan(&name, &oids) {
+		project_list = append(project_list, &MetaProject{Name: name, Oids: oids})
+	}
+	itr.Close()
+	return project_list, nil
+}
+
 func (self *CassandraMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	if !self.authenticate(v.Authorization) {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": "Unauthorized"})
@@ -157,7 +169,7 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	if Config.UsingLdap() {
-		return nil
+		return errNotImplemented
 	}
 	u, _ := self.findUser(user)
 	// return nil if the user is already there
@@ -171,7 +183,7 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) DeleteUser(user string) error {
 	if Config.UsingLdap() {
-		return nil
+		return errNotImplemented
 	}
 	return self.cassandraService.Client.Query("delete from users where username = ?;", user).Exec()
 }
@@ -179,7 +191,7 @@ func (self *CassandraMetaStore) DeleteUser(user string) error {
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
 	if Config.UsingLdap() {
-		return []*MetaUser{}, nil
+		return []*MetaUser{}, errNotImplemented
 	}
 	users := make([]*MetaUser, 0)
 	itr := self.cassandraService.Client.Query("select username from users;").Iter()
@@ -236,4 +248,12 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 		return true
 	}
 	return false
+}
+
+func (self *CassandraMetaStore) Projects() ([]*MetaProject, error) {
+	ao, err := self.findAllProjects()
+	if err != nil {
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
+	}
+	return ao, err
 }

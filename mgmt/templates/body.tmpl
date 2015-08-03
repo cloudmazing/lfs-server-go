@@ -16,6 +16,8 @@
         padding-bottom: 1rem;
       }
     </style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="/mgmt/js/mgmt.js"></script>
   </head>
   <body>
     <header class="masthead">
@@ -31,6 +33,7 @@
             <a class="menu-item {{if eq .Name "index"}}selected{{end}}" href="/mgmt">LFS Server</a>
             <a class="menu-item {{if eq .Name "users"}}selected{{end}}" href="/mgmt/users">Users</a>
             <a class="menu-item {{if eq .Name "objects"}}selected{{end}}" href="/mgmt/objects">Objects</a>
+            <a class="menu-item {{if eq .Name "projecs"}}selected{{end}}" href="/mgmt/projects">Projects</a>
           </nav>
         </div>
         <div class="three-fourths column">

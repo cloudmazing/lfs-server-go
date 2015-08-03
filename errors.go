@@ -12,6 +12,7 @@ var (
 	errHashMismatch        = errors.New("Content has does not match OID")
 	errSizeMismatch        = errors.New("Content size does not match")
 	errWriteS3             = errors.New("Erred writing to S3")
+	errNotImplemented      = errors.New("Not Implemented when using LDAP")
 )
 
 func isErrObjectNotFound(err error) bool {

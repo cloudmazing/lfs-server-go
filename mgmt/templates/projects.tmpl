@@ -1,0 +1,24 @@
+<div class="container">
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Oids</th>
+    </tr>
+    {{range .Projects}}
+    <tr>
+      <td valign="top" id={{.Name}} width="25%">{{.Name}}</td>
+      <td width="55%">
+        <div class="hidden oids">
+          {{.Oids}}
+        </div>
+        <div class="oid-hidden">
+          (Hidden)
+        </div>
+      </td>
+      <td valign="top" width="20%">
+        <a href="#" class="show-oids">Show/Hide OIDs</a>
+      </td>
+    </tr>
+    {{end}}
+  </table>
+</div>
