@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>lfs-server-go by cloudmazing</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>lfs-server-go</h1>
+        <h2>LFS server with multiple file stores and backing stores</h2>
+        <a href="https://github.com/cloudmazing/lfs-server-go" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="lfs-server-go" class="anchor" href="#lfs-server-go" aria-hidden="true"><span class="octicon octicon-link"></span></a>LFS Server Go!</h1>
+
+<p>LFS Server Go! is an example server that implements the <a href="https://github.com/github/git-lfs/tree/master/docs/api">Git LFS API</a> </p>
+
+<p>This is based off of <a href="https://github.com/github/lfs-test-server">lfs-test-server</a>  </p>
+
+<ol>
+<li>This server uses the same base directory for all objects</li>
+<li>The meta store is offloaded to 
+
+<ul>
+<li>Redis</li>
+<li>BoltDB</li>
+<li>Cassandra
+
+<ul>
+<li>TODO: password auth for cassandra</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>There is a notion of project -&gt; OID membership, which is lacking from the original.  This is wired up but still a WIP. It will allow for validating a user's membership to a project and the project's associated OID to the user, thus ensuring a user's access to a project will allow for access to an OID</li>
+</ol>
+
+<h2>
+<a id="installing" class="anchor" href="#installing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing</h2>
+
+<p>Alternatively, use the Go installer:</p>
+
+<pre><code>  $ go install github.com/memikequinn/lfs-server-go
+</code></pre>
+
+<h2>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building</h2>
+
+<p>To build from source, use the Go tools:</p>
+
+<pre><code>  $ go get github.com/memikequinn/lfs-server-go
+</code></pre>
+
+<h2>
+<a id="running" class="anchor" href="#running" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running</h2>
+
+<p><b> Set your GO_ENV. Options are <code>prod</code> or <code>dev</code> or <code>test</code></b></p>
+
+<p>Running the binary will start an LFS server on <code>localhost:8080</code> by default.
+All of the configuration settings are stored in config.ini.</p>
+
+<blockquote>
+<p>You'll want to copy config.ini.example to config.ini</p>
+</blockquote>
+
+<h3>
+<a id="an-example-usage" class="anchor" href="#an-example-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>An example usage:</h3>
+
+<p>Generate a key pair</p>
+
+<pre><code>openssl req -x509 -sha256 -nodes -days 2100 -newkey rsa:2048 -keyout mine.key -out mine.crt
+</code></pre>
+
+<p>Make yourself a run script</p>
+
+<p>Update the config to point at your new keys</p>
+
+<p>Build the server</p>
+
+<pre><code>go build
+
+</code></pre>
+
+<h3>
+<a id="start-it" class="anchor" href="#start-it" aria-hidden="true"><span class="octicon octicon-link"></span></a>Start it</h3>
+
+<pre><code>./scripts/start.sh
+
+</code></pre>
+
+<h2>
+<a id="client" class="anchor" href="#client" aria-hidden="true"><span class="octicon octicon-link"></span></a>Client</h2>
+
+<h3>
+<a id="further-client-documentation-on-the-client-is-available-at-httpsgit-lfsgithubcom" class="anchor" href="#further-client-documentation-on-the-client-is-available-at-httpsgit-lfsgithubcom" aria-hidden="true"><span class="octicon octicon-link"></span></a>Further client documentation on the client is available at <a href="https://git-lfs.github.com/">https://git-lfs.github.com/</a>
+</h3>
+
+<p>To use the LFS test server with the Git LFS client, configure it in the repository's <code>.gitconfig</code> file:</p>
+
+<pre><code>  [lfs]
+    url = "http://localhost:8080/janedoe/lfsrepo"
+
+</code></pre>
+
+<p>HTTPS:</p>
+
+<p>NOTE: If using https with a self signed cert also disable cert checking in the client repo.</p>
+
+<pre><code>    [lfs]
+        url = "https://localhost:8080/jimdoe/lfsrepo"
+
+    [http]
+        sslfverify = false
+
+</code></pre>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/cloudmazing/lfs-server-go/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/cloudmazing/lfs-server-go/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/cloudmazing/lfs-server-go"></a> is maintained by <a href="https://github.com/cloudmazing">cloudmazing</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
