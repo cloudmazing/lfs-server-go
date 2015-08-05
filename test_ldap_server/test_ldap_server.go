@@ -11,12 +11,13 @@ import (
 func main() {
 	s := ldap.NewServer()
 	handler := ldapHandler{}
+	searchHandler := searchSimple{}
 	log.Println("Starting server on localhost:1389")
 	s.BindFunc("", handler)
+	s.SearchFunc("", searchHandler)
 	if err := s.ListenAndServe("localhost:1389"); err != nil {
 		log.Fatal("LDAP Server Failed: %s", err.Error())
 	}
-
 }
 
 type ldapHandler struct {
@@ -54,6 +55,7 @@ func (h ldapHandler) Bind(bindDN, bindSimplePw string, conn net.Conn) (ldap.LDAP
 }
 
 func (s searchSimple) Search(boundDN string, searchReq ldap.SearchRequest, conn net.Conn) (ldap.ServerSearchResult, error) {
+	log.Println("Searching")
 	entries := []*ldap.Entry{
 		&ldap.Entry{"cn=ned,o=testers,o=company", []*ldap.EntryAttribute{
 			&ldap.EntryAttribute{"cn", []string{"ned"}},
