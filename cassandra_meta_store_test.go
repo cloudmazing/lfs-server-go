@@ -85,7 +85,6 @@ func TestCassandraPuthWithoutAuth(t *testing.T) {
 }
 
 func setupCassandraMeta() {
-	InitializeCassandra()
 	store, err := NewCassandraMetaStore()
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
@@ -108,5 +107,5 @@ func setupCassandraMeta() {
 }
 
 func teardownCassandraMeta() {
-	DropCassandra()
+	DropCassandra(NewCassandraSession().Client)
 }

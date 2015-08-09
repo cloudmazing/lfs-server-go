@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"strings"
 )
 
 var awsContentStore *AwsContentStore
@@ -126,11 +127,11 @@ func TestAwsContentStoreExists(t *testing.T) {
 }
 
 func awsConnectForTest() *s3.Bucket {
-	os.Setenv("AWS_ACCESS_KEY_ID", Config.AwsAccessKeyId)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", Config.AwsSecretAccessKey)
+	os.Setenv("AWS_ACCESS_KEY_ID", Config.Aws.AccessKeyId)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", Config.Aws.SecretAccessKey)
 	auth, err := aws.EnvAuth()
 	perror(err)
-	return s3.New(auth, aws.Regions[Config.AwsRegion]).Bucket(Config.AwsBucketName)
+	return s3.New(auth, aws.Regions[Config.Aws.Region]).Bucket(Config.Aws.BucketName)
 }
 
 func setupAwsTest() {
@@ -157,7 +158,9 @@ func teardownAwsTest() {
 			if len(item.Key) < 1 {
 				continue
 			}
-			delItems = append(delItems, item.Key)
+			if strings.Contains(item.Key, "a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72") {
+				delItems = append(delItems, item.Key)
+			}
 		}
 	}
 	if len(delItems) > 0 {

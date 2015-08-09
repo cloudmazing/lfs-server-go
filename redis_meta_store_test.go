@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"gopkg.in/redis.v3"
 )
 
 var (
@@ -85,7 +86,10 @@ func TestRedisPuthWithoutAuth(t *testing.T) {
 }
 
 func setupRedisMetaStore() {
-	store, err := NewRedisMetaStore()
+	client := redis.NewClient(&redis.Options{Addr: "localhost:6379", Password: Config.Redis.Password, DB: Config.Redis.DB})
+	_, err := client.Ping().Result()
+	perror(err)
+	store, err := &RedisMetaStore{redisService: &RedisService{Client: client}}, nil
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
 		os.Exit(1)

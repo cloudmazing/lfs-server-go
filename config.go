@@ -2,49 +2,62 @@ package main
 
 import (
 	"fmt"
-	"github.com/vaughan0/go-ini"
-	"net/url"
+	"gopkg.in/ini.v1"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 )
+
+type CassandraConfig struct {
+	Hosts    string `config:"localhost"` //separated by ","
+	Keyspace string `config:"lfs_server_go"`
+	Username string `config:""`
+	Password string `config:""`
+}
+
+type AwsConfig struct {
+	AccessKeyId     string `config:""`
+	SecretAccessKey string `config:""`
+	Region          string `config:"USWest"`
+	BucketName      string `config:"lfs-server-go-objects"`
+	BucketAcl       string `config:"bucket-owner-full-control"`
+}
+
+type LdapConfig struct {
+	Enabled         bool `config:false`
+	Server          string `config:"ldap://localhost:1389"`
+	Base            string `config:"dc=testers,c=test,o=company"`
+	UserObjectClass string `config:"(&(objectclass=person))"`
+	UserCn          string `config:"uid"`
+}
+
+type RedisConfig struct {
+	Host     string
+	Port     int64
+	Password string
+	DB       int64
+}
 
 // Configuration holds application configuration. Values will be pulled from
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
 type Configuration struct {
-	Listen              string `config:"tcp://:8080"`
-	Host                string `config:"localhost:8080"`
-	ContentPath         string `config:"lfs-content"`
-	AdminUser           string `config:"admin"`
-	AdminPass           string `config:"admin"`
-	Cert                string `config:""`
-	Key                 string `config:""`
-	Scheme              string `config:"http"`
-	Public              string `config:"public"`
-	MetaDB              string `config:"lfs-test.db"`
-	RedisUrl            string `config:"redis://localhost:6379/0"`
-	BackingStore        string `config:"bolt"`
-	LdapServer          string `config:"ldap://localhost:1389"`
-	UseLdap             string `config:false`
-	LdapBase            string `config:"dc=testers,c=test,o=company"`
-	LdapUserObjectClass string `config:"(&(objectclass=person))"`
-	LdapUserCn          string `config:"uid"`
-	CassandraHosts      string `config:"localhost"` //separated by ","
-	CassandraKeyspace   string `config:"lfs_server_go"`
-	AwsAccessKeyId      string `config:""`
-	AwsSecretAccessKey  string `config:""`
-	AwsRegion           string `config:"USWest"`
-	AwsBucketName       string `config:"lfs-server-go-objects"`
-	AwsBucketAcl        string `config:"bucket-owner-full-control"`
-	ContentStore        string `config:"filesystem"`
-}
-
-type RedisConfigT struct {
-	Addr     string
-	Password string
-	DB       int64
+	Listen       string `config:"tcp://:8080"`
+	Host         string `config:"localhost:8080"`
+	ContentPath  string `config:"lfs-content"`
+	AdminUser    string `config:"admin"`
+	AdminPass    string `config:"admin"`
+	Cert         string `config:""`
+	Key          string `config:""`
+	Scheme       string `config:"http"`
+	Public       bool `config:"public"`
+	MetaDB       string `config:"lfs-test.db"`
+	BackingStore string `config:"bolt"`
+	ContentStore string `config:"filesystem"`
+	Aws          *AwsConfig
+	Cassandra    *CassandraConfig
+	Ldap         *LdapConfig
+	Redis        *RedisConfig
 }
 
 func (c *Configuration) IsHTTPS() bool {
@@ -52,25 +65,20 @@ func (c *Configuration) IsHTTPS() bool {
 }
 
 func (c *Configuration) IsPublic() bool {
-	t, _ := strconv.ParseBool(Config.Public)
-	return t
-}
-
-func (c *Configuration) UsingLdap() bool {
-	t, _ := strconv.ParseBool(Config.UseLdap)
-	return t
+	return Config.Public
 }
 
 // Config is the global app configuration
 //var Config = &Configuration{}
 var GoEnv = os.Getenv("GO_ENV")
 var Config = &Configuration{}
-var RedisConfig = &RedisConfigT{}
 
 // iterate thru config.yaml and parse it
 // always called when initializing Config
 func init() {
-	file, err := ini.LoadFile("config.ini")
+	//	file, err := ioutil.ReadFile("config.ini")
+	fmt.Println("Loading config...")
+	cfg, err := ini.Load("config.ini")
 	if err != nil {
 		panic(fmt.Sprint("unable to read config.ini, %v", err))
 	}
@@ -78,38 +86,37 @@ func init() {
 		fmt.Println("GO_ENV is not set, defaulting to test")
 		GoEnv = "test"
 	}
-	typeE := reflect.TypeOf(Config).Elem()
-	valueE := reflect.ValueOf(Config).Elem()
-	for i := 0; i < typeE.NumField(); i++ {
-		sf := typeE.Field(i)
-		name := sf.Name
-		tag := sf.Tag.Get("config")
-		field := valueE.FieldByName(name)
-		// only do what has been declared in the config
-		e, ok := file.Get(GoEnv, name)
-		if !ok || e == "" {
-			field.SetString(tag)
-		} else {
-			field.SetString(e)
-		}
-	}
-	RedisConfig = setRedisConfig()
-}
 
-func setRedisConfig() *RedisConfigT {
-	_url, err := url.Parse(Config.RedisUrl)
-	perror(err)
-	db, _ := strconv.ParseInt(strings.Replace(_url.Path, "/", "", -1), 0, 0)
-	addr := _url.Host
-	var password string
-	var ok bool
-	if _url.User != nil {
-		password, ok = _url.User.Password()
-		if !ok {
-			password = ""
-		}
+	awsConfig := &AwsConfig{AccessKeyId: "", SecretAccessKey: "", Region: "USWest",
+		BucketName: "lfs-server-go-objects", BucketAcl: "bucket-owner-full-control"}
+	ldapConfig := &LdapConfig{Enabled: false, Server: "ldap://localhost:1389", Base: "dc=testers,c=test,o=company",
+		UserObjectClass: "(&(objectclass=person))", UserCn: "uid"}
+	cassandraConfig := &CassandraConfig{Hosts: "localhost", Keyspace: "lfs_server_go", Username: "", Password: ""}
+	configuration := &Configuration{
+		Listen:       "tcp://:8080",
+		Host:         "localhost:8080",
+		ContentPath:  "lfs-content",
+		AdminUser:    "admin",
+		AdminPass:    "admin",
+		Cert:         "",
+		Key:          "",
+		Scheme:       "http",
+		Public:       true,
+		MetaDB:       "lfs-test.db",
+		BackingStore: "bolt",
+		ContentStore: "filesystem",
+		Ldap:         ldapConfig,
+		Aws:          awsConfig,
+		Cassandra:    cassandraConfig,
+		Redis:        &RedisConfig{Host: "localhost", Port: 6379, Password: "", DB: 0},
 	}
-	return &RedisConfigT{Addr: addr, DB: db, Password: password}
+	err = cfg.Section("Main").MapTo(configuration)
+	err = cfg.Section("Aws").MapTo(configuration.Aws)
+	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
+	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
+	err = cfg.Section("Redis").MapTo(configuration.Redis)
+	Config = configuration
+
 }
 
 func (c *Configuration) DumpConfig() map[string]string {

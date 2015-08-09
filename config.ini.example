@@ -1,47 +1,63 @@
-; Prod is the default.  This is read in from GO_ENV
-;
-[prod]
+[Main]
 ; Port to listen on
 Listen = tcp://:9999
 ; Host address - used for downloading
 Host = 127.0.0.1:9999
 ; login for the admin user
-AdminUser = admin
-AdminPass = admin
+AdminUser = admin_username
+AdminPass = admin_password
 ; path to ssl certificate
-Cert = mine.crt
+Cert = somekey.crt
 ; path to ssl key
-Key = mine.key
+Key = somekey.key
 Scheme = https
 ; Should the contents be public?
-Public = true
-
+Public = false
 ; Database Configuration
 ; path to database file to use.
 ; Not used when both AWS storage and LDAP are enabled
-MetaDB = lfs.db
-; Optional - for storing meta content in Redis
-; RedisUrl = redis://localhost:6379/0
-; Optional - for storing meta content in Cassandra
-; CassandraHosts = list,of,comma,separated,hosts
-; Optional - used to select cassandra keyspace
-; Defaults to lfs_server_go
-; CassandraKeyspace = lfs_server_go
-
-; LDAP configuration - Optional
-;LdapServer = ldap://localhost:1389
-; true/false
-; UseLdap = true
-;LdapBase = ou=people,o=mycompany
-;LdapUserObjectClass = person
-;LdapUserCn = uid
-
+; MetaDB = lfs.db
 ; Content Store Configuration
 ; Where to store the content on disk. Not used when AWS storage is enabled
-ContentPath = /path/to/some/lfs_content
+ContentPath = lfs_content
 ;ContentStore options are [aws,filesystem]
-ContentStore = filesystem
+ContentStore = aws
+BackingStore = cassandra
 
+; Redis is optional
+[Redis]
+; Optional - for storing meta content in Redis
+Host = localhost
+;Port = 6379
+;DB = 0
+; optional
+;Password =
+
+; Cassandra section is optional - but suggested for large deployments
+[Cassandra]
+; Optional - for storing meta content in Cassandra
+; comma separated
+Hosts = localhost
+; Optional - used to select cassandra keyspace
+; Defaults to lfs_server_go_GO_ENV, if GO_ENV is not set,
+; Keyspace = lfs_server_go
+;Username =
+;Password =
+
+; LDAP section is optional - but suggested for large deployments
+[Ldap]
+; LDAP configuration - Optional
+;Server = ldap://localhost:1389
+; true/false
+; Enabled = true
+;Base = ou=people,o=mycompany
+;UserObjectClass = person
+;UserCn = uid
+
+; AWS is optional, but useful
+[Aws]
+AccessKeyId = your-access-key-id
+SecretAccessKey = your-secret-access-key
 ; AWS Configuration - Optional, unless you're using aws for the content store
 ;AwsAccessKeyId = your-access-key
 ;AwsSecretAccessKey = your-secret-key
@@ -57,10 +73,10 @@ ContentStore = filesystem
 ;us-west-1
 ;us-east-1
 ;us-gov-west-1
-;AwsRegion = us-east-1
+Region = us-east-1
 ;This should be a pre-existing bucket
 ;We try to create it but the response is not always fast enough
-;AwsBucketName = your-bucket-name
+BucketName = lfs-server-go-objects
 ;Acl options:
 ;bucket-owner-full-control
 ;bucket-owner-read
@@ -68,66 +84,5 @@ ContentStore = filesystem
 ;public-read-write
 ;public-read
 ;private
-;AwsBucketAcl = bucket-owner-full-control
+BucketAcl = bucket-owner-full-control
 
-[dev]
-Listen = tcp://:9999
-Host = 127.0.0.1:9999
-ContentPath = /path/to/some/lfs_content
-AdminUser = admin
-AdminPass = admin
-Cert = mine.crt
-Key = mine.key
-Scheme = https
-Public = false
-MetaDB = lfs.db
-; BackingStore = cassandra
-BackingStore = bolt
-;BackingStore = redis
-RedisUrl = redis://localhost:6379/0
-;LdapServer = ldap://localhost:1389
-; true/false
-UseLdap = true
-LdapBase = ou=people,o=mycompany
-LdapUserObjectClass = person
-LdapUserCn = uid
-;ContentStore options are [aws,filesystem]
-ContentStore = aws
-AwsAccessKeyId = your-access-key
-AwsSecretAccessKey = your-secret-key
-; Regions:
-;cn-north-1
-;sa-east-1
-;ap-northeast-1
-;ap-northeast-2
-;ap-southeast-1
-;eu-central-1
-;eu-west-1
-;us-west-2
-;us-west-1
-;us-east-1
-;us-gov-west-1
-AwsRegion = us-east-1
-; This should be a pre-existing bucket
-; We try to create it but the response is not always fast enough
-AwsBucketName = your-bucket-name
-; Acl options:
-;bucket-owner-full-control
-;bucket-owner-read
-;authenticated-read
-;public-read-write
-;public-read
-;private
-AwsBucketAcl = bucket-owner-full-control
-
-[test]
-; Dont put anything else in here unless you know what you're doing
-RedisUrl = redis://localhost:6379/1
-LdapServer = ldap://localhost:1389
-AwsAccessKeyId = your-access-key
-AwsSecretAccessKey = your-secret-key
-AwsRegion = us-east-1
-; If you want to test, create this bucket first
-; We do try to create it but it does not always get created fast enough
-AwsBucketName = your-test-bucket-name-should-differ-from-the-other
-ContentStore = filesystem

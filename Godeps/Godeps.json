@@ -88,6 +88,11 @@
 			"Rev": "c85f1217d51339c0fa3a498cc8b2075de695dae6"
 		},
 		{
+			"ImportPath": "gopkg.in/ini.v1",
+			"Comment": "v0-32-g45bf59e",
+			"Rev": "45bf59e51e747b1d61b3108a97549497a6efd3bc"
+		},
+		{
 			"ImportPath": "gopkg.in/redis.v3",
 			"Comment": "v3.2.1",
 			"Rev": "0c19d0be411de22fa3b1ec78319b668ea59e8335"
