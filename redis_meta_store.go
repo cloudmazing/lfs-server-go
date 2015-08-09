@@ -24,6 +24,7 @@ const UsersHashName = "lfs-meta:users"
 const AllOidsHashName = "lfs-meta:all:oids"
 const PasswordKey = "password"
 const UsernameKey = "username"
+const SizeKey = "size"
 
 func NewRedisMetaStore(client ...*RedisService) (*RedisMetaStore, error) {
 	if len(client) == 0 {
@@ -53,7 +54,7 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	}
 
 	// Add the Oid Record
-	_, err := client.HSet(v.Oid, "size", fmt.Sprintf("%d", v.Size)).Result()
+	_, err := client.HSet(v.Oid, SizeKey, fmt.Sprintf("%d", v.Size)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -85,17 +86,17 @@ func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	oids, oid_err := client.SMembers(AllOidsHashName).Result()
 	if oid_err != nil {
 		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + oid_err.Error()})
-		return nil, oid_err
+		return nil, errRedisObjectNotFound
 	}
 	var oid string
 	if exists(v.Oid, oids) {
 		oid = v.Oid
 	}
 
-	size, hg_err := client.HGet(oid, "size").Int64()
+	size, hg_err := client.HGet(oid, SizeKey).Int64()
 	if hg_err != nil {
-		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid})
-		return nil, hg_err
+		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid + " error " + hg_err.Error()})
+		return nil, errRedisObjectNotFound
 	}
 
 	meta := &MetaObject{Oid: v.Oid, Size: size, Existing: true}
@@ -118,8 +119,8 @@ func (self *RedisMetaStore) DeleteUser(user string) error {
 	}
 	client := self.redisService.Client
 	// Delete the user records
-	client.HDel(user, "username").Result()
-	client.HDel(user, "password").Result()
+	client.HDel(user, UsernameKey).Result()
+	client.HDel(user, PasswordKey).Result()
 	_, err := client.SRem(UsersHashName, user).Result()
 	return err
 }
@@ -158,7 +159,7 @@ func (self *RedisMetaStore) Objects() ([]*MetaObject, error) {
 	oids, _ := client.SMembers(AllOidsHashName).Result()
 	mus := make([]*MetaObject, 0)
 	for _, oid := range oids {
-		size, _ := client.HGet(oid, "size").Int64()
+		size, _ := client.HGet(oid, SizeKey).Int64()
 		mu := &MetaObject{Oid: oid, Size: size}
 		mus = append(mus, mu)
 	}

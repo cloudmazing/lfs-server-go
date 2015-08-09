@@ -75,7 +75,7 @@ func TestRedisPutWithAuth(t *testing.T) {
 	}
 }
 
-func TestRedisPuthWithoutAuth(t *testing.T) {
+func TestRedisPutWithoutAuth(t *testing.T) {
 	setupRedisMetaStore()
 	defer teardownRedisMetaStore()
 
