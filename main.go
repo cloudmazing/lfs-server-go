@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 )
@@ -94,6 +95,7 @@ func main() {
 	}
 
 	var listener net.Listener
+	runtime.GOMAXPROCS(Config.NumProcs)
 
 	tl, err := NewTrackingListener(Config.Listen)
 	if err != nil {

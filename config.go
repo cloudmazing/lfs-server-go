@@ -5,6 +5,7 @@ import (
 	"gopkg.in/ini.v1"
 	"os"
 	"reflect"
+	"runtime"
 	"strings"
 )
 
@@ -54,7 +55,8 @@ type Configuration struct {
 	MetaDB       string
 	BackingStore string
 	ContentStore string
-	LogFile 		 string
+	LogFile      string
+	NumProcs     int
 	Aws          *AwsConfig
 	Cassandra    *CassandraConfig
 	Ldap         *LdapConfig
@@ -103,6 +105,7 @@ func init() {
 		MetaDB:       "lfs-test.db",
 		BackingStore: "bolt",
 		ContentStore: "filesystem",
+		NumProcs:     runtime.NumCPU(),
 		Ldap:         ldapConfig,
 		Aws:          awsConfig,
 		Cassandra:    cassandraConfig,
