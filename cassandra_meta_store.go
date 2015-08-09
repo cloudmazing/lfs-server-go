@@ -179,7 +179,12 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	if u.Name != "" {
 		return nil
 	}
-	err := self.cassandraService.Client.Query("insert into users (username, password) values(?, ?);", user, pass).Exec()
+	encryptedPass, err := encryptPass([]byte(pass))
+	if err != nil {
+		return err
+	}
+
+	err = self.cassandraService.Client.Query("insert into users (username, password) values(?, ?);", user, encryptedPass).Exec()
 	return err
 }
 
@@ -247,10 +252,12 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
 		return false
 	}
-	if password != "" && mu.Password == password {
-		return true
+
+	match, err := checkPass([]byte(mu.Password), []byte(password))
+	if err != nil {
+		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
 	}
-	return false
+	return match
 }
 
 func (self *CassandraMetaStore) Projects() ([]*MetaProject, error) {

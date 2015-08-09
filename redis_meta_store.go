@@ -131,7 +131,11 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 	}
 	self.redisService.Client.HSet(user, UsernameKey, user).Result()
 	// TODO: do something with the responses
-	self.redisService.Client.HSet(user, PasswordKey, pass).Result()
+	encryptedPass, err := encryptPass([]byte(pass))
+	if err != nil {
+		return err
+	}
+	self.redisService.Client.HSet(user, PasswordKey, encryptedPass).Result()
 	self.redisService.Client.SAdd(UsersHashName, user).Result()
 	return nil
 }
@@ -244,15 +248,16 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 		return authenticateLdap(user, password)
 	}
 
-	mPass, err := self.redisService.Client.HGet(user, "password").Result()
+	mPass, err := self.redisService.Client.HGet(user, PasswordKey).Result()
 	if err != nil {
 		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
 		return false
 	}
-	if password != "" && string(mPass) == string(password) {
-		return true
+	match, err := checkPass([]byte(mPass), []byte(password))
+	if err != nil {
+		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
 	}
-	return false
+	return match
 }
 
 func (self *RedisMetaStore) Projects() ([]*MetaProject, error) {

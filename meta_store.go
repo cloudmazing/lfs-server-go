@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"encoding/base64"
+	"fmt"
 	"github.com/boltdb/bolt"
 	"strings"
 )
@@ -140,8 +141,11 @@ func (s *MetaStore) AddUser(user, pass string) error {
 		if bucket == nil {
 			return errNoBucket
 		}
-
-		err := bucket.Put([]byte(user), []byte(pass))
+		encryptedPass, err := encryptPass([]byte(pass))
+		if err != nil {
+			return err
+		}
+		err = bucket.Put([]byte(user), []byte(encryptedPass))
 		if err != nil {
 			return err
 		}
@@ -263,11 +267,11 @@ func (s *MetaStore) authenticate(authorization string) bool {
 		value = string(bucket.Get([]byte(user)))
 		return nil
 	})
-
-	if value != "" && value == password {
-		return true
+	match, err := checkPass([]byte(value), []byte(password))
+	if err != nil {
+		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
 	}
-	return false
+	return match
 }
 
 func (s *MetaStore) Projects() ([]*MetaProject, error) {

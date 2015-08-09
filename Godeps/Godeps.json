@@ -75,6 +75,14 @@
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		},
 		{
+			"ImportPath": "golang.org/x/crypto/bcrypt",
+			"Rev": "c89e5683853da5ed97731b507dcd8cda2b11afaf"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/blowfish",
+			"Rev": "c89e5683853da5ed97731b507dcd8cda2b11afaf"
+		},
+		{
 			"ImportPath": "gopkg.in/bsm/ratelimit.v1",
 			"Rev": "bda20d5067a03094fc6762f7ead53027afac5f28"
 		},
