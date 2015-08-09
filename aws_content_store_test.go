@@ -7,8 +7,8 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"io/ioutil"
 	"os"
-	"testing"
 	"strings"
+	"testing"
 )
 
 var awsContentStore *AwsContentStore

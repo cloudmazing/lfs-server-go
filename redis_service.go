@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gopkg.in/redis.v3"
 	"fmt"
+	"gopkg.in/redis.v3"
 )
 
 type RedisService struct {

@@ -30,11 +30,15 @@ func initializeCassandra(session *gocql.Session) error {
 	// projects table
 	q := fmt.Sprintf("create table if not exists projects (name text PRIMARY KEY, oids SET<text>);")
 	err := session.Query(q).Exec()
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 	// Oids table
 	q = fmt.Sprintf("create table if not exists oids(oid text primary key, size bigint);")
 	session.Query(q).Exec()
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 	// user management
 	q = fmt.Sprintf("create table if not exists users(username text primary key, password text);")
 	return session.Query(q).Exec()

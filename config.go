@@ -24,7 +24,7 @@ type AwsConfig struct {
 }
 
 type LdapConfig struct {
-	Enabled         bool `config:false`
+	Enabled         bool   `config:false`
 	Server          string `config:"ldap://localhost:1389"`
 	Base            string `config:"dc=testers,c=test,o=company"`
 	UserObjectClass string `config:"(&(objectclass=person))"`
@@ -50,7 +50,7 @@ type Configuration struct {
 	Cert         string `config:""`
 	Key          string `config:""`
 	Scheme       string `config:"http"`
-	Public       bool `config:"public"`
+	Public       bool   `config:"public"`
 	MetaDB       string `config:"lfs-test.db"`
 	BackingStore string `config:"bolt"`
 	ContentStore string `config:"filesystem"`

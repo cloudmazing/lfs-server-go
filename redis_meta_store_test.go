@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/redis.v3"
 	"os"
 	"testing"
-	"gopkg.in/redis.v3"
 )
 
 var (

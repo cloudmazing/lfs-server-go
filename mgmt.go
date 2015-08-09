@@ -11,7 +11,7 @@ import (
 
 var (
 	cssBox      *rice.Box
-	jsBox      *rice.Box
+	jsBox       *rice.Box
 	templateBox *rice.Box
 )
 

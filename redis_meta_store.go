@@ -27,7 +27,7 @@ const UsernameKey = "username"
 
 func NewRedisMetaStore(client ...*RedisService) (*RedisMetaStore, error) {
 	if len(client) == 0 {
-		client = append(client,NewRedisClient())
+		client = append(client, NewRedisClient())
 	}
 	return &RedisMetaStore{redisService: client[0]}, nil
 }
