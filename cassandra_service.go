@@ -11,49 +11,38 @@ type CassandraService struct {
 
 // TODO: Add auth for cassandra
 func NewCassandraSession() *CassandraService {
-	cluster := gocql.NewCluster(Config.CassandraHosts)
-	createCassandraKeyspace()
-	cluster.Keyspace = fmt.Sprintf("%s_%s", Config.CassandraKeyspace, GoEnv)
-	cluster.Consistency = gocql.Quorum
-	m := fmt.Sprintf("Connecting to host '%s'\n", Config.CassandraHosts)
-	logger.Log(kv{"fn": "cassandra_service", "msg": m})
-	m = fmt.Sprintf("Cassandra namespace '%s_%s'\n", Config.CassandraKeyspace, GoEnv)
-	logger.Log(kv{"fn": "cassandra_service", "msg": m})
+	cluster := gocql.NewCluster(Config.Cassandra.Hosts)
+	q := fmt.Sprintf("create keyspace if not exists %s_%s with replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };", Config.Cassandra.Keyspace, GoEnv)
 	session, err := cluster.CreateSession()
+	err = session.Query(q).Exec()
+	session.Close()
+	cluster.Keyspace = fmt.Sprintf("%s_%s", Config.Cassandra.Keyspace, GoEnv)
+	cluster.Consistency = gocql.Quorum
+	session, err = cluster.CreateSession()
+	perror(initializeCassandra(session))
 	perror(err)
-	//	defer session.Close()
+	logger.Log(kv{"fn": "cassandra_service", "msg": fmt.Sprintf("Connecting to host '%s'\n", Config.Cassandra.Hosts)})
+	logger.Log(kv{"fn": "cassandra_service", "msg": fmt.Sprintf("Cassandra.namespace '%s_%s'\n", Config.Cassandra.Keyspace, GoEnv)})
 	return &CassandraService{Client: session}
 }
 
-func createCassandraKeyspace() error {
-	cluster := gocql.NewCluster(Config.CassandraHosts)
-	q := fmt.Sprintf("create keyspace if not exists %s_%s with replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };", Config.CassandraKeyspace, GoEnv)
-	c, err := cluster.CreateSession()
-	c.Query(q).Exec()
-	defer c.Close()
-	return err
-}
-func InitializeCassandra() error {
-	//	cs := gocql.NewCluster(Config.CassandraHosts)
-	c := NewCassandraSession().Client
-	createCassandraKeyspace()
+func initializeCassandra(session *gocql.Session) error {
 	// projects table
 	q := fmt.Sprintf("create table if not exists projects (name text PRIMARY KEY, oids SET<text>);")
-	err := c.Query(q).Exec()
-	perror(err)
+	err := session.Query(q).Exec()
+	if err != nil {return err}
 	// Oids table
 	q = fmt.Sprintf("create table if not exists oids(oid text primary key, size bigint);")
-	c.Query(q).Exec()
-	perror(err)
+	session.Query(q).Exec()
+	if err != nil {return err}
 	// user management
 	q = fmt.Sprintf("create table if not exists users(username text primary key, password text);")
-	c.Query(q).Exec()
-	perror(err)
-	return nil
+	return session.Query(q).Exec()
 }
 
-func DropCassandra() error {
-	m := fmt.Sprintf("%s_%s", Config.CassandraKeyspace, GoEnv)
+func DropCassandra(session *gocql.Session) error {
+	config := Config.Cassandra
+	m := fmt.Sprintf("%s_%s", config.Keyspace, GoEnv)
 	q := fmt.Sprintf("drop keyspace %s;", m)
 	c := NewCassandraSession().Client
 	return c.Query(q).Exec()

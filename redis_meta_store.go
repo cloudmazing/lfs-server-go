@@ -25,8 +25,11 @@ const AllOidsHashName = "lfs-meta:all:oids"
 const PasswordKey = "password"
 const UsernameKey = "username"
 
-func NewRedisMetaStore() (*RedisMetaStore, error) {
-	return &RedisMetaStore{redisService: NewRedisClient()}, nil
+func NewRedisMetaStore(client ...*RedisService) (*RedisMetaStore, error) {
+	if len(client) == 0 {
+		client = append(client,NewRedisClient())
+	}
+	return &RedisMetaStore{redisService: client[0]}, nil
 }
 
 func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
@@ -110,7 +113,7 @@ func (self *RedisMetaStore) Close() {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) DeleteUser(user string) error {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
 	client := self.redisService.Client
@@ -123,7 +126,7 @@ func (self *RedisMetaStore) DeleteUser(user string) error {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) AddUser(user, pass string) error {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
 	self.redisService.Client.HSet(user, UsernameKey, user).Result()
@@ -135,7 +138,7 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 
 // TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return []*MetaUser{}, errNotImplemented
 	}
 	var mus []*MetaUser
@@ -237,7 +240,7 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 		return false
 	}
 	user, password := cs[:i], cs[i+1:]
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return authenticateLdap(user, password)
 	}
 

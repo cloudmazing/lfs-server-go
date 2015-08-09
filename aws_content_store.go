@@ -26,15 +26,15 @@ type AwsContentStore struct {
 
 // NewContentStore creates a ContentStore at the base directory.
 func NewAwsContentStore() (*AwsContentStore, error) {
-	os.Setenv("AWS_ACCESS_KEY_ID", Config.AwsAccessKeyId)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", Config.AwsSecretAccessKey)
+	os.Setenv("AWS_ACCESS_KEY_ID", Config.Aws.AccessKeyId)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", Config.Aws.SecretAccessKey)
 	auth, err := aws.EnvAuth()
 	if err != nil {
 		logger.Log(kv{"fn": "AwsContentStore.NewAwsContentStore", "err": ": " + err.Error()})
 		return &AwsContentStore{}, err
 	}
-	client := s3.New(auth, aws.Regions[Config.AwsRegion])
-	bucket := client.Bucket(Config.AwsBucketName)
+	client := s3.New(auth, aws.Regions[Config.Aws.Region])
+	bucket := client.Bucket(Config.Aws.BucketName)
 	self := &AwsContentStore{bucket: bucket, client: client}
 	self.makeBucket()
 	return self, nil
@@ -55,7 +55,7 @@ func (s *AwsContentStore) makeBucket() error {
 		}
 	}
 	if !exists {
-		err := s.bucket.PutBucket(s3.ACL(Config.AwsBucketAcl))
+		err := s.bucket.PutBucket(s3.ACL(Config.Aws.BucketAcl))
 		return err
 	}
 	return nil

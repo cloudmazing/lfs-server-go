@@ -12,8 +12,11 @@ type CassandraMetaStore struct {
 	cassandraService *CassandraService
 }
 
-func NewCassandraMetaStore() (*CassandraMetaStore, error) {
-	return &CassandraMetaStore{cassandraService: NewCassandraSession()}, nil
+func NewCassandraMetaStore(cassandraService ...*CassandraService) (*CassandraMetaStore, error) {
+	if len(cassandraService) == 0 {
+		cassandraService = append(cassandraService, NewCassandraSession())
+	}
+	return &CassandraMetaStore{cassandraService: cassandraService[0]}, nil
 }
 
 func (self *CassandraMetaStore) Close() {
@@ -168,7 +171,7 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
 	u, _ := self.findUser(user)
@@ -182,7 +185,7 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) DeleteUser(user string) error {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
 	return self.cassandraService.Client.Query("delete from users where username = ?;", user).Exec()
@@ -190,7 +193,7 @@ func (self *CassandraMetaStore) DeleteUser(user string) error {
 
 // TODO: Skip if using ldap
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return []*MetaUser{}, errNotImplemented
 	}
 	users := make([]*MetaUser, 0)
@@ -236,7 +239,7 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 	}
 	user, password := cs[:i], cs[i+1:]
 
-	if Config.UsingLdap() {
+	if Config.Ldap.Enabled {
 		return authenticateLdap(user, password)
 	}
 	mu, err := self.findUser(user)

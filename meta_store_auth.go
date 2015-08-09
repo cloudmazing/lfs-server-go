@@ -11,7 +11,7 @@ import (
 )
 
 func ldapHost() *url.URL {
-	_url, err := url.Parse(Config.LdapServer)
+	_url, err := url.Parse(Config.Ldap.Server)
 	perror(err)
 	return _url
 }
@@ -81,10 +81,10 @@ func authenticateLdap(user, password string) bool {
 }
 
 func findUserDn(user string) (string, error) {
-	fltr := fmt.Sprintf("(&(objectClass=%s)(%s=%s))", Config.LdapUserObjectClass, Config.LdapUserCn, user)
-	//	m := fmt.Sprintf("LDAP Search Host '%s' Filter '%s' base '%s'\n", ldapHost().String(), fltr, Config.LdapBase)
+	fltr := fmt.Sprintf("(&(objectClass=%s)(%s=%s))", Config.Ldap.UserObjectClass, Config.Ldap.UserCn, user)
+	//	m := fmt.Sprintf("LDAP Search Host '%s' Filter '%s' base '%s'\n", ldapHost().String(), fltr, Config.Ldap.Base)
 	//	logger.Log(kv{"fn": "meta_store_auth.findUserDn", "msg": m})
-	base := fmt.Sprintf("%s=%s,%s", Config.LdapUserCn, user, Config.LdapBase)
+	base := fmt.Sprintf("%s=%s,%s", Config.Ldap.UserCn, user, Config.Ldap.Base)
 	search := &ldap.SearchRequest{
 		BaseDN: base,
 		Filter: fltr,

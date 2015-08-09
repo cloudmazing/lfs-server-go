@@ -8,7 +8,7 @@ GO_ENV=${GO_ENV:-dev}
 export GO_ENV
 
 if [[ ("${GO_ENV}" == "dev") && (! "`ps -ef | grep '[t]est_ldap'`") ]] ; then
-  ./test_ldap/test_ldap > log/ldap.log 2>&1 &
+  ./test_ldap_server/test_ldap_server > log/ldap.log 2>&1 &
 fi
 
 [[ ! -f "lfs-server-go" ]] && go build
