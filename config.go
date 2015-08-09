@@ -9,26 +9,26 @@ import (
 )
 
 type CassandraConfig struct {
-	Hosts    string `config:"localhost"` //separated by ","
-	Keyspace string `config:"lfs_server_go"`
-	Username string `config:""`
-	Password string `config:""`
+	Hosts    string
+	Keyspace string
+	Username string
+	Password string
 }
 
 type AwsConfig struct {
-	AccessKeyId     string `config:""`
-	SecretAccessKey string `config:""`
-	Region          string `config:"USWest"`
-	BucketName      string `config:"lfs-server-go-objects"`
-	BucketAcl       string `config:"bucket-owner-full-control"`
+	AccessKeyId     string
+	SecretAccessKey string
+	Region          string
+	BucketName      string
+	BucketAcl       string
 }
 
 type LdapConfig struct {
-	Enabled         bool   `config:false`
-	Server          string `config:"ldap://localhost:1389"`
-	Base            string `config:"dc=testers,c=test,o=company"`
-	UserObjectClass string `config:"(&(objectclass=person))"`
-	UserCn          string `config:"uid"`
+	Enabled         bool
+	Server          string
+	Base            string
+	UserObjectClass string
+	UserCn          string
 }
 
 type RedisConfig struct {
@@ -42,18 +42,19 @@ type RedisConfig struct {
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
 type Configuration struct {
-	Listen       string `config:"tcp://:8080"`
-	Host         string `config:"localhost:8080"`
-	ContentPath  string `config:"lfs-content"`
-	AdminUser    string `config:"admin"`
-	AdminPass    string `config:"admin"`
-	Cert         string `config:""`
-	Key          string `config:""`
-	Scheme       string `config:"http"`
-	Public       bool   `config:"public"`
-	MetaDB       string `config:"lfs-test.db"`
-	BackingStore string `config:"bolt"`
-	ContentStore string `config:"filesystem"`
+	Listen       string
+	Host         string
+	ContentPath  string
+	AdminUser    string
+	AdminPass    string
+	Cert         string
+	Key          string
+	Scheme       string
+	Public       bool
+	MetaDB       string
+	BackingStore string
+	ContentStore string
+	LogFile 		 string
 	Aws          *AwsConfig
 	Cassandra    *CassandraConfig
 	Ldap         *LdapConfig
@@ -76,15 +77,12 @@ var Config = &Configuration{}
 // iterate thru config.yaml and parse it
 // always called when initializing Config
 func init() {
-	//	file, err := ioutil.ReadFile("config.ini")
-	fmt.Println("Loading config...")
 	cfg, err := ini.Load("config.ini")
 	if err != nil {
 		panic(fmt.Sprint("unable to read config.ini, %v", err))
 	}
 	if GoEnv == "" {
-		fmt.Println("GO_ENV is not set, defaulting to test")
-		GoEnv = "test"
+		GoEnv = "production"
 	}
 
 	awsConfig := &AwsConfig{AccessKeyId: "", SecretAccessKey: "", Region: "USWest",

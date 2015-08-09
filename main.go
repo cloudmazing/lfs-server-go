@@ -77,15 +77,13 @@ func findMetaStore() (GenericMetaStore, error) {
 }
 
 func findContentStore() (GenericContentStore, error) {
+	logger.Log(kv{"fn": "findContentStore", "msg": fmt.Sprintf("Using ContentStore", Config.ContentStore)})
 	switch Config.ContentStore {
 	case "filestore":
-		fmt.Println("Using ContentStore", Config.ContentStore)
 		return NewContentStore(Config.ContentPath)
 	case "aws":
-		fmt.Println("Using ContentStore", Config.ContentStore)
 		return NewAwsContentStore()
 	default:
-		fmt.Println("ContentStore not set, using default", Config.ContentStore)
 		return NewContentStore(Config.ContentPath)
 	}
 }

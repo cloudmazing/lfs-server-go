@@ -1,10 +1,15 @@
 package main
 
-import "reflect"
+import (
+	"reflect"
+	"fmt"
+	"runtime"
+)
 
 func perror(err error) {
 	if err != nil {
-		logger.Log(kv{"fn": "perror", "msg": err.Error()})
+		_, file, line, _ := runtime.Caller(2)
+		fmt.Println(fmt.Sprintf("%s:%d, error: %s", file, line, err.Error()))
 		panic(err)
 	}
 }

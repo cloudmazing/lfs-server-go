@@ -1,0 +1,133 @@
+#!/bin/sh
+#
+# This script will generate a release on cloudmazing/lfs-server-go.
+# Ensure that you've bumped version in main.go, then run the script.
+# The script does the following
+#   * Ensure the build succeeds (and pulls the version from the build)
+#   * Ensure the tests pass
+#   * Cross compiles for supported platforms
+#   * Creates the release on github/lfs-server-go
+#   * Uploads binary assets to the release.
+
+
+go build -o lfs-server-go
+rc=$?; if [[ $rc != 0 ]]; then echo "Build failed."; exit $rc; fi
+version=$(./lfs-server-go -v)
+
+while true; do
+  read -p "Release version $version? [y/n] " yn
+  case $yn in
+    [Yy]* ) break;;
+    [Nn]* ) exit;;
+    * ) echo "Please answer yes or no.";;
+  esac
+done
+
+# Make sure tests pass
+echo "Running tests..."
+./scripts/test.sh
+rc=$?; if [[ $rc != 0 ]]; then echo "Tests failed, cannot release."; exit $rc; fi
+
+# Build all files
+rm -rf dist
+mkdir dist
+
+echo "Building darwin amd64"
+mkdir -p dist/lfs-server-go-darwin-amd64
+GOPATH=`pwd`/Godeps/_workspace GOOS=darwin GOARCH=amd64 go build -o dist/lfs-server-go-darwin-amd64/lfs-server-go
+cp README.md dist/lfs-server-go-darwin-amd64
+cp LICENSE dist/lfs-server-go-darwin-amd64
+cd dist && tar zcf lfs-server-go-darwin-amd64-$version.tar.gz lfs-server-go-darwin-amd64; cd ..
+
+echo "Building linux 386"
+mkdir -p dist/lfs-server-go-linux-386
+GOPATH=`pwd`/Godeps/_workspace GOOS=linux GOARCH=386 go build -o dist/lfs-server-go-linux-386/lfs-server-go
+cp README.md dist/lfs-server-go-linux-386
+cp LICENSE dist/lfs-server-go-linux-386
+cd dist && tar zcf lfs-server-go-linux-386-$version.tar.gz lfs-server-go-linux-386; cd ..
+
+echo "Building linux amd64"
+mkdir -p dist/lfs-server-go-linux-amd64
+GOPATH=`pwd`/Godeps/_workspace GOOS=linux GOARCH=amd64 go build -o dist/lfs-server-go-linux-amd64/lfs-server-go
+cp README.md dist/lfs-server-go-linux-amd64
+cp LICENSE dist/lfs-server-go-linux-amd64
+cd dist && tar zcf lfs-server-go-linux-amd64-$version.tar.gz lfs-server-go-linux-amd64; cd ..
+
+echo "Building freebsd 386"
+mkdir -p dist/lfs-server-go-freebsd-386
+GOPATH=`pwd`/Godeps/_workspace GOOS=freebsd GOARCH=386 go build -o dist/lfs-server-go-freebsd-386/lfs-server-go
+cp README.md dist/lfs-server-go-freebsd-386
+cp LICENSE dist/lfs-server-go-freebsd-386
+cd dist && tar zcf lfs-server-go-freebsd-386-$version.tar.gz lfs-server-go-freebsd-386; cd ..
+
+echo "Building freebsd amd64"
+mkdir -p dist/lfs-server-go-freebsd-amd64
+GOPATH=`pwd`/Godeps/_workspace GOOS=freebsd GOARCH=amd64 go build -o dist/lfs-server-go-freebsd-amd64/lfs-server-go
+cp README.md dist/lfs-server-go-freebsd-amd64
+cp LICENSE dist/lfs-server-go-freebsd-amd64
+cd dist && tar zcf lfs-server-go-freebsd-amd64-$version.tar.gz lfs-server-go-freebsd-amd64; cd ..
+
+echo "Building windows 386"
+mkdir -p dist/lfs-server-go-windows-386
+GOPATH=`pwd`/Godeps/_workspace GOOS=windows GOARCH=386 go build -o dist/lfs-server-go-windows-386/lfs-server-go.exe
+cp README.md dist/lfs-server-go-windows-386
+cp LICENSE dist/lfs-server-go-windows-386
+cd dist && zip -q -j lfs-server-go-windows-386-$version.zip lfs-server-go-windows-386/*; cd ..
+
+echo "Building windows amd64"
+mkdir -p dist/lfs-server-go-windows-amd64
+GOPATH=`pwd`/Godeps/_workspace GOOS=windows GOARCH=amd64 go build -o dist/lfs-server-go-windows-amd64/lfs-server-go.exe
+cp README.md dist/lfs-server-go-windows-amd64
+cp LICENSE dist/lfs-server-go-windows-amd64
+cd dist && zip -q -j lfs-server-go-windows-amd64-$version.zip lfs-server-go-windows-amd64/*; cd ..
+
+# Create the release
+tmpl=`mktemp lfs-server-go-release.XXXXXXXXX`
+out=`mktemp lfs-server-go-out.XXXXXXXX`
+payload=$(cat <<EOF
+{
+  "tag_name": "v$version",
+  "target_commitish": "master",
+  "name": "Release $version",
+  "draft": false,
+  "prerelease": false,
+  "body": ""
+}
+EOF
+)
+echo "$payload" > $tmpl
+
+${EDITOR:-vim} $tmpl
+
+curl -n -X POST -d @$tmpl -o $out https://api.github.com/repos/cloudmazing/lfs-server-go/releases
+id=$(cat $out | jq -r ".id")
+
+if [[ $id == "null" ]]; then echo "Failed creating release."; cat $out; exit 1; fi
+echo "Created release id: $id"
+
+
+# Upload each file to the release
+upload=$(cat $out | jq -r ".upload_url" | sed s/"{?name}"//)
+echo "Uploading lfs-server-go-darwin-amd64-$version.tar.gz"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-darwin-amd64-$version.tar.gz "$upload?name=lfs-server-go-darwin-amd64-$version.tar.gz&label=Mac%20AMD64"
+
+echo "Uploading lfs-server-go-linux-386-$version.tar.gz"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-linux-386-$version.tar.gz "$upload?name=lfs-server-go-linux-386-$version.tar.gz&label=Linux%20386"
+
+echo "Uploading lfs-server-go-linux-amd64-$version.tar.gz"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-linux-amd64-$version.tar.gz "$upload?name=lfs-server-go-linux-amd64-$version.tar.gz&label=Linux%20AMD64"
+
+echo "Uploading lfs-server-go-freebsd-386-$version.tar.gz"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-freebsd-386-$version.tar.gz "$upload?name=lfs-server-go-freebsd-386-$version.tar.gz&label=FreeBSD%20386"
+
+echo "Uploading lfs-server-go-freebsd-amd64-$version.tar.gz"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-freebsd-amd64-$version.tar.gz "$upload?name=lfs-server-go-freebsd-amd64-$version.tar.gz&label=FreeBSD%20AMD64"
+
+echo "Uploading lfs-server-go-windows-386-$version.zip"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-windows-386-$version.zip "$upload?name=lfs-server-go-windows-386-$version.zip&label=Windows%20386"
+
+echo "Uploading lfs-server-go-windows-amd64-$version"
+curl -n -o $out -H "Content-Type: application/octet-stream" -X POST --data-binary @dist/lfs-server-go-windows-amd64-$version.zip "$upload?name=lfs-server-go-windows-amd64-$version.zip&label=Windows%20AMD64"
+
+rm -f $tmpl $out
+rm -rf dist
