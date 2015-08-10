@@ -169,7 +169,6 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 	return &MetaUser{}, errUsertNotFound
 }
 
-// TODO: Skip if using ldap
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
@@ -188,7 +187,6 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	return err
 }
 
-// TODO: Skip if using ldap
 func (self *CassandraMetaStore) DeleteUser(user string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
@@ -196,7 +194,6 @@ func (self *CassandraMetaStore) DeleteUser(user string) error {
 	return self.cassandraService.Client.Query("delete from users where username = ?;", user).Exec()
 }
 
-// TODO: Skip if using ldap
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
 	if Config.Ldap.Enabled {
 		return []*MetaUser{}, errNotImplemented

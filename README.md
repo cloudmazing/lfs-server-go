@@ -13,8 +13,8 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
   * Redis
   * BoltDB
   * Cassandra
-    * TODO: password auth for cassandra
 1. There is a notion of project -\> OID membership, which is lacking from the original.  This is wired up but still a WIP. It will allow for validating a user's membership to a project and the project's associated OID to the user, thus ensuring a user's access to a project will allow for access to an OID
+1. TODO: Remove/Clean up old objects on delete
 
 ## Installing
 

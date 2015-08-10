@@ -113,7 +113,6 @@ func (self *RedisMetaStore) Close() {
 	return
 }
 
-// TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) DeleteUser(user string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
@@ -126,7 +125,6 @@ func (self *RedisMetaStore) DeleteUser(user string) error {
 	return err
 }
 
-// TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) AddUser(user, pass string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
@@ -142,7 +140,6 @@ func (self *RedisMetaStore) AddUser(user, pass string) error {
 	return nil
 }
 
-// TODO: Should probably not be used when using ldap
 func (self *RedisMetaStore) Users() ([]*MetaUser, error) {
 	if Config.Ldap.Enabled {
 		return []*MetaUser{}, errNotImplemented
