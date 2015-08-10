@@ -109,13 +109,30 @@ func init() {
 		Ldap:         ldapConfig,
 		Aws:          awsConfig,
 		Cassandra:    cassandraConfig,
-		Redis:        &RedisConfig{Host: "localhost", Port: 6379, Password: "", DB: 0},
 	}
 	err = cfg.Section("Main").MapTo(configuration)
 	err = cfg.Section("Aws").MapTo(configuration.Aws)
 	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
 	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
-	err = cfg.Section("Redis").MapTo(configuration.Redis)
+	// We have to do redis differently because the ini lib
+	// tries to make int64 into time structs
+	redis := cfg.Section("Redis").KeysHash()
+	db, err := cfg.Section("Redis").GetKey("DB")
+	if err != nil {
+		cfg.Section("Redis").NewKey("DB", "0")
+		db, _ = cfg.Section("Redis").GetKey("DB")
+	}
+	port, err := cfg.Section("Redis").GetKey("Port")
+	if err != nil {
+		cfg.Section("Redis").NewKey("Port", "6379")
+		port, _ = cfg.Section("Redis").GetKey("Port")
+	}
+	configuration.Redis = &RedisConfig{
+		Host:     redis["Host"],
+		Password: redis["Password"],
+		DB:       db.MustInt64(0),
+		Port:     port.MustInt64(6379),
+	}
 	Config = configuration
 
 }

@@ -61,7 +61,8 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	// add a record for the hash
 	client.SAdd(AllOidsHashName, v.Oid)
 	// Add the Oid to the project
-	_, err = client.SAdd(projectObjectKey(v.Repo), v.Oid).Result()
+	repo := fmt.Sprintf("%s:%s", v.User, v.Repo)
+	_, err = client.SAdd(projectObjectKey(repo), v.Oid).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -78,14 +79,14 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 
 	if !self.authenticate(v.Authorization) {
-		logger.Log(kv{"fn": "meta_store", "msg": "Unauthorized"})
+		//		logger.Log(kv{"fn": "meta_store", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
 
 	client := self.redisService.Client
 	oids, oid_err := client.SMembers(AllOidsHashName).Result()
 	if oid_err != nil {
-		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + oid_err.Error()})
+		//		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + oid_err.Error()})
 		return nil, errRedisObjectNotFound
 	}
 	var oid string
@@ -95,7 +96,7 @@ func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 
 	size, hg_err := client.HGet(oid, SizeKey).Int64()
 	if hg_err != nil {
-		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid + " error " + hg_err.Error()})
+		//		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid + " error " + hg_err.Error()})
 		return nil, errRedisObjectNotFound
 	}
 
@@ -171,7 +172,6 @@ func (self *RedisMetaStore) Objects() ([]*MetaObject, error) {
 func exists(s string, l []string) bool {
 	for _, t := range l {
 		if s == t {
-			fmt.Sprintf("Found %s in %v\n", s, l)
 			return true
 		}
 	}
@@ -242,6 +242,7 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 	cs := string(c)
 	i := strings.IndexByte(cs, ':')
 	if i < 0 {
+		logger.Log(kv{"fn": "redis_meta_store", "msg": "Unable to parse auth"})
 		return false
 	}
 	user, password := cs[:i], cs[i+1:]
@@ -251,16 +252,24 @@ func (self *RedisMetaStore) authenticate(authorization string) bool {
 
 	mPass, err := self.redisService.Client.HGet(user, PasswordKey).Result()
 	if err != nil {
-		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
+		//		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Auth error: %s", err.Error())})
 		return false
 	}
 	match, err := checkPass([]byte(mPass), []byte(password))
 	if err != nil {
-		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
+		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %s", err.Error())})
 	}
 	return match
 }
 
 func (self *RedisMetaStore) Projects() ([]*MetaProject, error) {
-	return []*MetaProject{}, nil
+	client := self.redisService.Client
+	projects, _ := client.SMembers(ProjectsHashName).Result()
+	project_list := make([]*MetaProject, 0)
+	for _, project := range projects {
+		oids, _ := self.findProjectOids(project)
+		fmt.Println("OIDS:", oids)
+		project_list = append(project_list, &MetaProject{Name: project, Oids: oids})
+	}
+	return project_list, nil
 }
