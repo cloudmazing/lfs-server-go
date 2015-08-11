@@ -113,7 +113,9 @@ func setupRedisMetaStore() {
 func teardownRedisMetaStore() {
 	redisRedisMetaStore.redisService.Client.HDel(contentOid).Result()
 	redisRedisMetaStore.redisService.Client.HDel("lfs-meta:project:oids::").Result()
-	redisRedisMetaStore.redisService.Client.Del("lfs-meta:project:oids::").Result()
+	redisRedisMetaStore.redisService.Client.SRem(fmt.Sprintf(ProjectsHashName, "::"), ":").Result()
+	redisRedisMetaStore.redisService.Client.SRem(ProjectsHashName, ":").Result()
+	redisRedisMetaStore.redisService.Client.SRem(AllOidsHashName, "f97e1b2936a56511b3b6efc99011758e4700d60fb1674d31445d1ee40b663f24").Result()
 	redisRedisMetaStore.redisService.Client.Del("f97e1b2936a56511b3b6efc99011758e4700d60fb1674d31445d1ee40b663f24").Result()
 	redisRedisMetaStore.redisService.Client.Del("aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f").Result()
 }

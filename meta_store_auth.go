@@ -98,7 +98,7 @@ func findUserDn(user string) (string, error) {
 		//		logger.Log(kv{"fn": "meta_store_auth.findUserDn", "Found DN": r.Entries[0].DN})
 		return r.Entries[0].DN, nil
 	}
-	return "", errLdapUsertNotFound
+	return "", errLdapUserNotFound
 }
 
 type authError struct {

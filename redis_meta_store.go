@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -12,11 +11,6 @@ import (
 type RedisMetaStore struct {
 	redisService *RedisService
 }
-
-var (
-	errNoRedisProject      = errors.New("Project not found in redis")
-	errRedisObjectNotFound = errors.New("Object not found in redis")
-)
 
 const OidHashName = "lfs-meta:project:oids"
 const ProjectsHashName = "lfs-meta:projects"
@@ -62,6 +56,9 @@ func (self *RedisMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	client.SAdd(AllOidsHashName, v.Oid)
 	// Add the Oid to the project
 	repo := fmt.Sprintf("%s:%s", v.User, v.Repo)
+	if repo == "" {
+		repo = "public"
+	}
 	_, err = client.SAdd(projectObjectKey(repo), v.Oid).Result()
 	if err != nil {
 		return nil, err
@@ -87,7 +84,7 @@ func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	oids, oid_err := client.SMembers(AllOidsHashName).Result()
 	if oid_err != nil {
 		//		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + oid_err.Error()})
-		return nil, errRedisObjectNotFound
+		return nil, errObjectNotFound
 	}
 	var oid string
 	if exists(v.Oid, oids) {
@@ -97,7 +94,7 @@ func (self *RedisMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	size, hg_err := client.HGet(oid, SizeKey).Int64()
 	if hg_err != nil {
 		//		logger.Log(kv{"fn": "meta_store", "msg": "Unable to find OID: " + v.Oid + " error " + hg_err.Error()})
-		return nil, errRedisObjectNotFound
+		return nil, errObjectNotFound
 	}
 
 	meta := &MetaObject{Oid: v.Oid, Size: size, Existing: true}
@@ -177,20 +174,20 @@ func exists(s string, l []string) bool {
 
 func isErrNoRedisHash(err error) bool {
 	type isNotThereError interface {
-		errNoRedisProject() bool
+		errProjectNotFound() bool
 	}
 	if ae, ok := err.(isNotThereError); ok {
-		return ae.errNoRedisProject()
+		return ae.errProjectNotFound()
 	}
 	return false
 }
 
 func isErrRedisObjectNotFound(err error) bool {
-	type errRedisObjectNotFound interface {
-		errRedisObjectNotFound() bool
+	type errObjectNotFound interface {
+		errObjectNotFound() bool
 	}
-	if ae, ok := err.(errRedisObjectNotFound); ok {
-		return ae.errRedisObjectNotFound()
+	if ae, ok := err.(errObjectNotFound); ok {
+		return ae.errObjectNotFound()
 	}
 	return false
 }
@@ -208,7 +205,7 @@ func (self *RedisMetaStore) findProject(v *RequestVars) (string, error) {
 			return p, nil
 		}
 	}
-	return "", errNoRedisProject
+	return "", errProjectNotFound
 }
 
 func (self *RedisMetaStore) findProjectOids(project string) ([]string, error) {
@@ -265,7 +262,6 @@ func (self *RedisMetaStore) Projects() ([]*MetaProject, error) {
 	project_list := make([]*MetaProject, 0)
 	for _, project := range projects {
 		oids, _ := self.findProjectOids(project)
-		fmt.Println("OIDS:", oids)
 		project_list = append(project_list, &MetaProject{Name: project, Oids: oids})
 	}
 	return project_list, nil

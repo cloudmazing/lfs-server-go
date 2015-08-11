@@ -162,11 +162,11 @@ func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 	defer itr.Close()
 	for itr.Scan(&_user, &pass) {
 		if _user == "" {
-			return &MetaUser{}, errUsertNotFound
+			return &MetaUser{}, errUserNotFound
 		}
 		return &MetaUser{Name: _user, Password: pass}, nil
 	}
-	return &MetaUser{}, errUsertNotFound
+	return &MetaUser{}, errUserNotFound
 }
 
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
