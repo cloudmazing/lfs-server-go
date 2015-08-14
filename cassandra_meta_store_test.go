@@ -50,6 +50,41 @@ func TestCassandraGetWithoutAuth(t *testing.T) {
 	}
 }
 
+func TestCassandraUsers(t *testing.T) {
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+	defer teardownCassandraMeta()
+
+	err := metaStoreTestCassandra.AddUser(testUser, testPass)
+	if err != nil {
+		t.Errorf("Unable to add user, error %s", err.Error())
+	}
+
+	users, err := metaStoreTestCassandra.Users()
+	if err != nil {
+		t.Errorf("Unable to retrieve users, error %s", err.Error())
+	}
+	if len(users) == 0 {
+		t.Errorf("Adding a user failed")
+	}
+
+	Config.Ldap.Enabled = true
+
+	_, luErr := metaStoreTestCassandra.Users()
+	if luErr == nil {
+		t.Errorf("Expected to raise error when trying to check users with ldap enabled")
+	}
+	Config.Ldap.Enabled = false
+
+	uErr := metaStoreTestCassandra.DeleteUser(testUser)
+	if uErr != nil {
+		t.Errorf("Unable to delete user, error %s", err.Error())
+	}
+
+}
+
 func TestCassandraPutWithAuth(t *testing.T) {
 	serr := setupCassandraMeta()
 	if serr != nil {
@@ -90,16 +125,21 @@ func TestCassandraPutWithAuth(t *testing.T) {
 	}
 }
 
-func TestCassandraPuthWithoutAuth(t *testing.T) {
+func TestCassandraPutWithoutAuth(t *testing.T) {
 	serr := setupCassandraMeta()
 	if serr != nil {
 		t.Errorf(serr.Error())
 	}
 	defer teardownCassandraMeta()
 
-	_, err := metaStoreTestCassandra.Put(&RequestVars{Authorization: badAuth, Oid: contentOid, Size: 42})
+	_, err := metaStoreTestCassandra.Put(&RequestVars{Authorization: badAuth, User: testUser, Oid: contentOid, Size: 42})
 	if !isAuthError(err) {
 		t.Errorf("expected auth error, got: %s", err)
+	}
+
+	_, errPut := metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, User: testUser, Oid: contentOid, Size: 42, Repo: testRepo})
+	if errPut != nil {
+		t.Errorf("Unexpected error in Put: %s", errPut)
 	}
 }
 
@@ -131,6 +171,14 @@ func TestCassandraOids(t *testing.T) {
 		t.Errorf("Failed find OID, it does not match")
 	}
 
+	mos, mosErr := metaStoreTestCassandra.Objects()
+	if mosErr != nil {
+		t.Errorf("error was raised when trying to fetch objects", mosErr.Error())
+	}
+	if len(mos) == 0 {
+		t.Errorf("No objects where found, at least 1 was expected")
+	}
+
 	delOidErr := metaStoreTestCassandra.removeOid(nonexistingOid)
 	if delOidErr != nil {
 		t.Errorf("Failed remove OID")
@@ -139,39 +187,48 @@ func TestCassandraOids(t *testing.T) {
 }
 
 func TestCassandraProjects(t *testing.T) {
-	serr := setupCassandraMeta()
-	if serr != nil {
-		t.Errorf(serr.Error())
+	err := setupCassandraMeta()
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 	defer teardownCassandraMeta()
 
-	createErr := metaStoreTestCassandra.createProject(extraRepo)
-	if createErr != nil {
+	err = metaStoreTestCassandra.createProject(extraRepo)
+	if err != nil {
 		t.Errorf("Failed to create project")
-	}
-
-	proj, findPErr := metaStoreTestCassandra.findProject(extraRepo)
-	if findPErr != nil {
-		t.Errorf("Failed to find project")
-	}
-	if proj.Name != extraRepo {
-		t.Errorf("Failed to find project, got wrong name in response")
 	}
 
 	listProjects, err := metaStoreTestCassandra.findAllProjects()
 	if err != nil {
 		t.Errorf("Failed getting cassandra projects")
 	}
-	for _, p := range listProjects {
-		fmt.Println("project", p)
+	found := false
+	for i := range listProjects {
+		if listProjects[i].Name == extraRepo {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("Failed finding project %s", extraRepo)
 	}
 
-	projects, err := metaStoreTestCassandra.Projects()
+	proj, err := metaStoreTestCassandra.findProject(extraRepo)
+	if err != nil {
+		t.Errorf("Failed to find project")
+	}
+
+	if proj.Name != extraRepo {
+		t.Errorf("Failed to find project, got wrong name in response %s", proj.Name)
+	}
+
+	_, err = metaStoreTestCassandra.findProject("")
+	if err == nil {
+		t.Errorf("Expected error but got none")
+	}
+
+	_, err = metaStoreTestCassandra.Projects()
 	if err != nil {
 		t.Errorf("Failed getting cassandra projects")
-	}
-	for _, p := range projects {
-		fmt.Println("project", p)
 	}
 
 	delErr := metaStoreTestCassandra.removeProject(extraRepo)
@@ -184,6 +241,27 @@ func TestCassandraProjects(t *testing.T) {
 		t.Errorf("findProject should have raised an error")
 	}
 
+}
+
+func TestProjectOidRelationship(t *testing.T) {
+	err := setupCassandraMeta()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	defer teardownCassandraMeta()
+
+	err = metaStoreTestCassandra.createProject(testRepo)
+	if err != nil {
+		t.Errorf("Failed creating project")
+	}
+	err = metaStoreTestCassandra.addOidToProject(contentOid, testRepo)
+	if err != nil {
+		t.Errorf("Failed adding OID to project")
+	}
+	err = metaStoreTestCassandra.removeOidFromProject(contentOid, testRepo)
+	if err != nil {
+		t.Errorf("Failed removing OID from project", err.Error())
+	}
 }
 
 func setupCassandraMeta() error {
@@ -200,7 +278,7 @@ func setupCassandraMeta() error {
 		return errors.New(fmt.Sprintf("error adding test user to meta store: %s\n", err))
 	}
 
-	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize}
+	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: testRepo}
 	if _, err := metaStoreTestCassandra.Put(rv); err != nil {
 		teardownCassandraMeta()
 		fmt.Printf("error seeding cassandra test meta store: %s\n", err)

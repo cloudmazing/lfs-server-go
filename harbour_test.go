@@ -307,6 +307,7 @@ var (
 	noAuthContentSize = int64(len(noAuthcontent))
 	noAuthOid         = "4609ed10888c145d228409aa5587bab9fe166093bb7c155491a96d079c9149be"
 	extraRepo         = "mytestproject"
+	testRepo          = "repo"
 )
 
 func baseUrl() string {
@@ -359,7 +360,7 @@ func seedMetaStore() error {
 		return err
 	}
 
-	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: "repo"}
+	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: testRepo}
 	if _, err := testMetaStore.Put(rv); err != nil {
 		return err
 	}
