@@ -71,6 +71,10 @@
 			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
 		},
 		{
+			"ImportPath": "github.com/relops/cqlr",
+			"Rev": "0ac35893ea3f1e4ee717ba838972b70a0943f7d7"
+		},
+		{
 			"ImportPath": "github.com/vaughan0/go-ini",
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		},
