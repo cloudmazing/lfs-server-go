@@ -5,61 +5,75 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"fmt"
-	"strings"
+	"github.com/gocql/gocql"
 	"github.com/relops/cqlr"
+	"strings"
 )
 
 type CassandraMetaStore struct {
 	cassandraService *CassandraService
+	client           *gocql.Session
 }
 
 func NewCassandraMetaStore(cassandraService ...*CassandraService) (*CassandraMetaStore, error) {
 	if len(cassandraService) == 0 {
 		cassandraService = append(cassandraService, NewCassandraSession())
 	}
-	return &CassandraMetaStore{cassandraService: cassandraService[0]}, nil
+	cs := cassandraService[0]
+	return &CassandraMetaStore{cassandraService: cs, client: cs.Client}, nil
 }
 
 func (self *CassandraMetaStore) Close() {
-	defer self.cassandraService.Client.Close()
+	defer self.client.Close()
 	return
 }
 
 func (self *CassandraMetaStore) createProject(project string) error {
-	q := fmt.Sprintf("insert into projects (name) values('%s');", project)
-	err := self.cassandraService.Client.Query(q).Exec()
+	err := self.client.Query(`insert into projects (name) values(?)`, project).Exec()
 	return err
 }
 
 func (self *CassandraMetaStore) addOidToProject(oid string, project string) error {
-	q := fmt.Sprintf("update projects set oids = oids + {'%s'} where name = '%s';", oid, project)
-	err := self.cassandraService.Client.Query(q).Exec()
+	err := self.client.Query(`update projects set oids = oids + {?} where name = ?`, oid, project).Exec()
 	return err
 }
 
 func (self *CassandraMetaStore) createOid(oid string, size int64) error {
-	q := fmt.Sprintf("insert into oids (oid, size) values ('%s', %d);", oid, size)
-	return self.cassandraService.Client.Query(q).Exec()
+	return self.client.Query(`insert into oids (oid, size) values (?, ?)`, oid, size).Exec()
 }
 
 func (self *CassandraMetaStore) removeOid(oid string) error {
-	q := fmt.Sprintf("select project from projects where oids contains '%s';", oid)
-	return self.cassandraService.Client.Query(q).Exec()
+	/*
+		Oids are shared amongst projects, so this will need to find out the following:
+		1. What projects (if any) have the requested OID.
+		2. If other projects are still using the OID, then do not delete it from the main OID listing
+	*/
+	//	return self.client.Query("update projects set oids = oids - {?} where oids contains ?", oid).Exec()
+	return self.client.Query("delete from oids where oid = ?", oid).Exec()
 }
 
-func (self *CassandraMetaStore) removeProject(v *RequestVars) error {
-	q := fmt.Sprintf("delete from projects where name = '%s;", v.Repo)
-	return self.cassandraService.Client.Query(q).Exec()
+func (self *CassandraMetaStore) removeOidFromProject(oid, project string) error {
+	/*
+		Oids are shared amongst projects, so this will need to find out the following:
+		1. What projects (if any) have the requested OID.
+		2. If other projects are still using the OID, then do not delete it from the main OID listing
+	*/
+	return self.client.Query("update projects set oids = oids - {?} where oids contains ?", oid).Exec()
+}
+
+func (self *CassandraMetaStore) removeProject(projectName string) error {
+	return self.client.Query(`delete from projects where name = ?`, projectName).Exec()
 }
 
 func (self *CassandraMetaStore) findProject(projectName string) (*MetaProject, error) {
 	if projectName == "" {
 		return nil, errProjectNotFound
 	}
-	q := self.cassandraService.Client.Query(`select * from projects where name = ?`, projectName)
+	q := self.client.Query(`select * from projects where name = ?`, projectName)
 	b := cqlr.BindQuery(q)
 	var ct MetaProject
 	b.Scan(&ct)
+	defer b.Close()
 	if ct.Name == "" {
 		return nil, errProjectNotFound
 	}
@@ -67,41 +81,38 @@ func (self *CassandraMetaStore) findProject(projectName string) (*MetaProject, e
 }
 
 func (self *CassandraMetaStore) findOid(oid string) (*MetaObject, error) {
-	q := fmt.Sprintf("select oid, size from oids where oid = '%s' limit 1;", oid)
-	itr := self.cassandraService.Client.Query(q).Iter()
-	defer itr.Close()
-	var size int64
-	var lOid string
-	for itr.Scan(&lOid, &size) {
-		if lOid == "" {
-			return nil, errObjectNotFound
-		}
-		return &MetaObject{Oid: lOid, Size: size}, nil
+	q := self.client.Query(`select oid, size from oids where oid = ? limit 1`, oid)
+	b := cqlr.BindQuery(q)
+	var mo MetaObject
+	b.Scan(&mo)
+	defer b.Close()
+	if mo.Oid == "" {
+		return nil, errObjectNotFound
 	}
-	return nil, errObjectNotFound
+	return &mo, nil
 }
 
 func (self *CassandraMetaStore) findAllOids() ([]*MetaObject, error) {
-	itr := self.cassandraService.Client.Query("select oid, size from oids;").Iter()
-	var oid string
-	var size int64
-	oid_list := make([]*MetaObject, 0)
-	for itr.Scan(&oid, &size) {
-		oid_list = append(oid_list, &MetaObject{Oid: oid, Size: size})
+	q := self.client.Query(`select oid, size from oids`)
+	b := cqlr.BindQuery(q)
+	mos := make([]*MetaObject, 0)
+	var mo MetaObject
+	for b.Scan(&mo) {
+		mos = append(mos, &mo)
 	}
-	itr.Close()
-	return oid_list, nil
+	defer b.Close()
+	return mos, nil
 }
 
 func (self *CassandraMetaStore) findAllProjects() ([]*MetaProject, error) {
-	itr := self.cassandraService.Client.Query("select name, oids from projects;").Iter()
-	var oids []string
-	var name string
+	q := self.client.Query(`select name, oids from project`)
+	b := cqlr.BindQuery(q)
 	project_list := make([]*MetaProject, 0)
-	for itr.Scan(&name, &oids) {
-		project_list = append(project_list, &MetaProject{Name: name, Oids: oids})
+	var mp MetaProject
+	for b.Scan(&mp) {
+		project_list = append(project_list, &mp)
 	}
-	itr.Close()
+	defer b.Close()
 	return project_list, nil
 }
 
@@ -159,7 +170,7 @@ Usage: FindUser("testuser")
 */
 func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
 	var mu MetaUser
-	q := self.cassandraService.Client.Query(`select * from users where username = ?`, user)
+	q := self.client.Query(`select * from users where username = ?`, user)
 	b := cqlr.BindQuery(q)
 	b.Scan(&mu)
 	if mu.Name == "" {
@@ -182,15 +193,14 @@ func (self *CassandraMetaStore) AddUser(user, pass string) error {
 		return err
 	}
 
-	err = self.cassandraService.Client.Query("insert into users (username, password) values(?, ?);", user, encryptedPass).Exec()
-	return err
+	return self.client.Query(`insert into users (username, password) values(?, ?)`, user, encryptedPass).Exec()
 }
 
 func (self *CassandraMetaStore) DeleteUser(user string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
-	return self.cassandraService.Client.Query("delete from users where username = ?;", user).Exec()
+	return self.client.Query(`delete from users where username = ?`, user).Exec()
 }
 
 func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
@@ -198,7 +208,7 @@ func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
 		return []*MetaUser{}, errNotImplemented
 	}
 	users := make([]*MetaUser, 0)
-	itr := self.cassandraService.Client.Query("select username from users;").Iter()
+	itr := self.client.Query(`select username from users`).Iter()
 	defer itr.Close()
 	var username string
 	for itr.Scan(&username) {
@@ -209,6 +219,14 @@ func (self *CassandraMetaStore) Users() ([]*MetaUser, error) {
 
 func (self *CassandraMetaStore) Objects() ([]*MetaObject, error) {
 	ao, err := self.findAllOids()
+	if err != nil {
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
+	}
+	return ao, err
+}
+
+func (self *CassandraMetaStore) Projects() ([]*MetaProject, error) {
+	ao, err := self.findAllProjects()
 	if err != nil {
 		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
 	}
@@ -254,12 +272,4 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
 	}
 	return match
-}
-
-func (self *CassandraMetaStore) Projects() ([]*MetaProject, error) {
-	ao, err := self.findAllProjects()
-	if err != nil {
-		logger.Log(kv{"fn": "cassandra_meta_store", "msg": err.Error()})
-	}
-	return ao, err
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"testing"
-	"errors"
 )
 
 var (
@@ -101,6 +101,89 @@ func TestCassandraPuthWithoutAuth(t *testing.T) {
 	if !isAuthError(err) {
 		t.Errorf("expected auth error, got: %s", err)
 	}
+}
+
+func TestCassandraOids(t *testing.T) {
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+	defer teardownCassandraMeta()
+
+	allOids, _ := metaStoreTestCassandra.findAllOids()
+	cb := len(allOids)
+
+	createOidErr := metaStoreTestCassandra.createOid(nonexistingOid, 1)
+	if createOidErr != nil {
+		t.Errorf("Failed to create OID")
+	}
+
+	allOids, _ = metaStoreTestCassandra.findAllOids()
+	if cb == len(allOids) {
+		t.Errorf("Failed add OID")
+	}
+
+	mo, findOidErr := metaStoreTestCassandra.findOid(nonexistingOid)
+	if findOidErr != nil {
+		t.Errorf("Failed find OID")
+	}
+	if mo == nil || mo.Oid != nonexistingOid {
+		t.Errorf("Failed find OID, it does not match")
+	}
+
+	delOidErr := metaStoreTestCassandra.removeOid(nonexistingOid)
+	if delOidErr != nil {
+		t.Errorf("Failed remove OID")
+	}
+
+}
+
+func TestCassandraProjects(t *testing.T) {
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+	defer teardownCassandraMeta()
+
+	createErr := metaStoreTestCassandra.createProject(extraRepo)
+	if createErr != nil {
+		t.Errorf("Failed to create project")
+	}
+
+	proj, findPErr := metaStoreTestCassandra.findProject(extraRepo)
+	if findPErr != nil {
+		t.Errorf("Failed to find project")
+	}
+	if proj.Name != extraRepo {
+		t.Errorf("Failed to find project, got wrong name in response")
+	}
+
+	listProjects, err := metaStoreTestCassandra.findAllProjects()
+	if err != nil {
+		t.Errorf("Failed getting cassandra projects")
+	}
+	for _, p := range listProjects {
+		fmt.Println("project", p)
+	}
+
+	projects, err := metaStoreTestCassandra.Projects()
+	if err != nil {
+		t.Errorf("Failed getting cassandra projects")
+	}
+	for _, p := range projects {
+		fmt.Println("project", p)
+	}
+
+	delErr := metaStoreTestCassandra.removeProject(extraRepo)
+	if delErr != nil {
+		t.Errorf("Failed to delete project")
+	}
+
+	_, findPErrEmpty := metaStoreTestCassandra.findProject(extraRepo)
+	if findPErrEmpty == nil {
+		t.Errorf("findProject should have raised an error")
+	}
+
 }
 
 func setupCassandraMeta() error {

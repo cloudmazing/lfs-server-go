@@ -52,8 +52,8 @@ type Representation struct {
 
 // MetaUser encapsulates information about a meta store user
 type MetaUser struct {
-	Name     string  `cql:"username"`
-	Password string  ` cql:"password"`
+	Name     string `cql:"username"`
+	Password string ` cql:"password"`
 }
 
 // Wrapper for MetaStore so we can use different types

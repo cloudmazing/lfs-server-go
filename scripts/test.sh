@@ -21,8 +21,9 @@ for p in $prereqs; do
    echo "$p does not look to be running, tests will fail"
   fi
 done
-
-go test
+go fmt
+go test -coverprofile=cover.out -covermode=count
+go tool cover -html=cover.out
 resp=$?
 
 if [[ "x${ldap_pid}" != "x" ]]; then
