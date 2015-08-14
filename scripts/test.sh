@@ -4,7 +4,8 @@ set -o pipefail
 
 export GO_ENV=test
 ldap_pid=""
-cd $(dirname $0)/../
+base=$(dirname $0)/../
+cd $base
 if [[ ! "`ps -ef | grep '[t]est_ldap_server'`" ]] ; then
   echo "Starting LDAP server"
   cd test_ldap_server
@@ -22,8 +23,8 @@ for p in $prereqs; do
   fi
 done
 go fmt
-go test -coverprofile=cover.out -covermode=count
-go tool cover -html=cover.out
+go test -coverprofile=$base/coverage/cover.out -covermode=count
+go tool cover -html=$base/coverage/cover.out
 resp=$?
 
 if [[ "x${ldap_pid}" != "x" ]]; then
