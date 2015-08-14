@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"testing"
+	"errors"
 )
 
 var (
@@ -11,8 +11,16 @@ var (
 )
 
 func TestCassandraGetWithAuth(t *testing.T) {
-	setupCassandraMeta()
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+
 	defer teardownCassandraMeta()
+	metaFail, errA := metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: noAuthOid})
+	if errA == nil {
+		t.Fatalf("Error Should not have access to OID: %s", metaFail.Oid)
+	}
 
 	meta, err := metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: contentOid})
 	if err != nil {
@@ -29,7 +37,11 @@ func TestCassandraGetWithAuth(t *testing.T) {
 }
 
 func TestCassandraGetWithoutAuth(t *testing.T) {
-	setupCassandraMeta()
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+
 	defer teardownCassandraMeta()
 
 	_, err := metaStoreTestCassandra.Get(&RequestVars{Authorization: badAuth, Oid: contentOid})
@@ -39,7 +51,11 @@ func TestCassandraGetWithoutAuth(t *testing.T) {
 }
 
 func TestCassandraPutWithAuth(t *testing.T) {
-	setupCassandraMeta()
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
+
 	defer teardownCassandraMeta()
 
 	meta, err := metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, Oid: nonexistingOid, Size: 42})
@@ -75,7 +91,10 @@ func TestCassandraPutWithAuth(t *testing.T) {
 }
 
 func TestCassandraPuthWithoutAuth(t *testing.T) {
-	setupCassandraMeta()
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
+	}
 	defer teardownCassandraMeta()
 
 	_, err := metaStoreTestCassandra.Put(&RequestVars{Authorization: badAuth, Oid: contentOid, Size: 42})
@@ -84,26 +103,27 @@ func TestCassandraPuthWithoutAuth(t *testing.T) {
 	}
 }
 
-func setupCassandraMeta() {
+func setupCassandraMeta() error {
 	store, err := NewCassandraMetaStore()
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("error initializing test meta store: %s\n", err))
 	}
 
 	metaStoreTestCassandra = store
 	if err := metaStoreTestCassandra.AddUser(testUser, testPass); err != nil {
 		teardownCassandraMeta()
 		fmt.Printf("error adding test user to meta store: %s\n", err)
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("error adding test user to meta store: %s\n", err))
 	}
 
 	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize}
 	if _, err := metaStoreTestCassandra.Put(rv); err != nil {
 		teardownCassandraMeta()
-		fmt.Printf("error seeding test meta store: %s\n", err)
-		os.Exit(1)
+		fmt.Printf("error seeding cassandra test meta store: %s\n", err)
+		return errors.New(fmt.Sprintf("error seeding cassandra test meta store: %s\n", err))
 	}
+	return nil
 }
 
 func teardownCassandraMeta() {

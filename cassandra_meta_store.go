@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"strings"
+	"github.com/relops/cqlr"
 )
 
 type CassandraMetaStore struct {
@@ -51,21 +52,18 @@ func (self *CassandraMetaStore) removeProject(v *RequestVars) error {
 	return self.cassandraService.Client.Query(q).Exec()
 }
 
-func (self *CassandraMetaStore) findProject(projectName string) (string, error) {
+func (self *CassandraMetaStore) findProject(projectName string) (*MetaProject, error) {
 	if projectName == "" {
-		return "", errProjectNotFound
+		return nil, errProjectNotFound
 	}
-	q := fmt.Sprintf("select name from projects where name = '%s' limit 1;", projectName)
-	itr := self.cassandraService.Client.Query(q).Iter()
-	defer itr.Close()
-	var project string
-	for itr.Scan(&project) {
-		if project == "" {
-			return "", errProjectNotFound
-		}
-		return project, nil
+	q := self.cassandraService.Client.Query(`select * from projects where name = ?`, projectName)
+	b := cqlr.BindQuery(q)
+	var ct MetaProject
+	b.Scan(&ct)
+	if ct.Name == "" {
+		return nil, errProjectNotFound
 	}
-	return "", errProjectNotFound
+	return &ct, nil
 }
 
 func (self *CassandraMetaStore) findOid(oid string) (*MetaObject, error) {
@@ -155,27 +153,28 @@ func (self *CassandraMetaStore) Get(v *RequestVars) (*MetaObject, error) {
 	return &meta, nil
 }
 
+/*
+finds a user
+Usage: FindUser("testuser")
+*/
 func (self *CassandraMetaStore) findUser(user string) (*MetaUser, error) {
-	var _user string
-	var pass string
-	itr := self.cassandraService.Client.Query("select username, password from users where username = ? limit 1;", user).Iter()
-	defer itr.Close()
-	for itr.Scan(&_user, &pass) {
-		if _user == "" {
-			return &MetaUser{}, errUserNotFound
-		}
-		return &MetaUser{Name: _user, Password: pass}, nil
+	var mu MetaUser
+	q := self.cassandraService.Client.Query(`select * from users where username = ?`, user)
+	b := cqlr.BindQuery(q)
+	b.Scan(&mu)
+	if mu.Name == "" {
+		return nil, errUserNotFound
 	}
-	return &MetaUser{}, errUserNotFound
+	return &mu, nil
 }
 
 func (self *CassandraMetaStore) AddUser(user, pass string) error {
 	if Config.Ldap.Enabled {
 		return errNotImplemented
 	}
-	u, _ := self.findUser(user)
+	_, uErr := self.findUser(user)
 	// return nil if the user is already there
-	if u.Name != "" {
+	if uErr == nil {
 		return nil
 	}
 	encryptedPass, err := encryptPass([]byte(pass))

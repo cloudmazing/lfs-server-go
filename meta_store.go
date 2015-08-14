@@ -173,12 +173,6 @@ func (s *MetaStore) DeleteUser(user string) error {
 	return err
 }
 
-// MetaUser encapsulates information about a meta store user
-type MetaUser struct {
-	Name     string
-	Password string
-}
-
 // Users returns all MetaUsers in the meta store
 func (s *MetaStore) Users() ([]*MetaUser, error) {
 	if Config.Ldap.Enabled {
