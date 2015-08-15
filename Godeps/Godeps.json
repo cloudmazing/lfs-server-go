@@ -55,20 +55,20 @@
 			"Rev": "6807e777504f54ad073ecef66747de158294b639"
 		},
 		{
-			"ImportPath": "github.com/mavricknz/asn1-ber",
-			"Rev": "ce3c3d1d8e4190a390fc72f551222783cbd6e55a"
-		},
-		{
-			"ImportPath": "github.com/mavricknz/ldap",
-			"Rev": "6638977d26a6bc5ac0d2a9a5dcbefe02c456ea38"
-		},
-		{
 			"ImportPath": "github.com/mitchellh/goamz/aws",
 			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
 		},
 		{
 			"ImportPath": "github.com/mitchellh/goamz/s3",
 			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
+		},
+		{
+			"ImportPath": "github.com/nmcclain/asn1-ber",
+			"Rev": "ec51d5ed21377b4023ca7b1e70ae4cb296ee6047"
+		},
+		{
+			"ImportPath": "github.com/nmcclain/ldap",
+			"Rev": "2a93a58a34c92bac004ec9f0bb2e8cdeed583cad"
 		},
 		{
 			"ImportPath": "github.com/relops/cqlr",

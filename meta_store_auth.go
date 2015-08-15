@@ -4,20 +4,22 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/mavricknz/ldap"
+	"github.com/nmcclain/ldap"
 	"net/url"
 	"strconv"
 	"strings"
 )
 
-func ldapHost() *url.URL {
-	_url, err := url.Parse(Config.Ldap.Server)
-	perror(err)
-	return _url
+func ldapHost() (*url.URL, error) {
+	return url.Parse(Config.Ldap.Server)
 }
 
-func NewLdapConnection() *ldap.LDAPConnection {
-	lh := ldapHost()
+func NewLdapConnection() (*ldap.Conn, error) {
+	var err error
+	lh, err := ldapHost()
+	if err != nil {
+		logger.Log(kv{"fn": "NewLdapConnection", "error": err.Error()})
+	}
 	hoster := strings.Split(lh.Host, ":")
 	port := func() uint16 {
 		if len(hoster) < 2 {
@@ -31,35 +33,51 @@ func NewLdapConnection() *ldap.LDAPConnection {
 			return uint16(port)
 		}
 	}
-	var ldapCon *ldap.LDAPConnection
+	var ldapCon *ldap.Conn
 	if strings.Contains(lh.String(), "ldaps") {
-		ldapCon = ldap.NewLDAPSSLConnection(hoster[0], port(), &tls.Config{InsecureSkipVerify: true})
+		ldapCon, err = ldap.DialTLS("tcp", fmt.Sprintf("%s:%d", hoster[0], port()), &tls.Config{InsecureSkipVerify: true})
 	} else {
-		ldapCon = ldap.NewLDAPConnection(hoster[0], port())
+		ldapCon, err = ldap.Dial("tcp", fmt.Sprintf("%s:%d", hoster[0], port()))
 	}
-	err := ldapCon.Connect()
-	perror(err)
-	return ldapCon
+	if err != nil {
+		logger.Log(kv{"fn": "NewLdapConnection", "error": err.Error()})
+		return nil, err
+	}
+	return ldapCon, nil
 }
 
 func LdapSearch(search *ldap.SearchRequest) (*ldap.SearchResult, error) {
-	ldapCon := NewLdapConnection()
-	s, er := ldapCon.Search(search)
-	defer ldapCon.Close()
-	if er != nil {
-		logger.Log(kv{"fn": "meta_store_auth.LdapSearch", "msg": fmt.Sprintf("LDAP ERR: %S", er.Error())})
-		return nil, er
+	ldapCon, err := NewLdapConnection()
+	if err != nil {
+		logger.Log(kv{"fn": "LdapSearch", "search error": err.Error()})
+		return nil, err
 	}
-	if s == nil {
+	s, err := ldapCon.Search(search)
+	defer ldapCon.Close()
+	if err != nil {
+		logger.Log(kv{"fn": "meta_store_auth.LdapSearch", "error": err.Error()})
+		return nil, err
+	}
+	if (len(Config.Ldap.BindDn) + len(Config.Ldap.BindPass)) > 0 {
+		err = ldapCon.Bind(Config.Ldap.BindDn, Config.Ldap.BindPass)
+		if err != nil {
+			logger.Log(kv{"fn": "LdapSearch", "Bind error": err.Error()})
+			return nil, err
+		}
+	}
+	if len(s.Entries) == 0 {
 		return nil, errNoLdapSearchResults
 	}
-	s.String()
-	return s, er
+	return s, err
 }
 
 // boolean bind request
 func LdapBind(user string, password string) bool {
-	ldapCon := NewLdapConnection()
+	ldapCon, err := NewLdapConnection()
+	if err != nil {
+		logger.Log(kv{"fn": "LdapBind", "error": err.Error()})
+		return false
+	}
 	reqE := ldapCon.Bind(user, password)
 	defer ldapCon.Close()
 	resp := false
@@ -74,20 +92,22 @@ func LdapBind(user string, password string) bool {
 func authenticateLdap(user, password string) bool {
 	dn, err := findUserDn(user)
 	if err != nil {
-		logger.Log(kv{"fn": "meta_store_auth", "msg": fmt.Sprintf("LDAP ERR: %S", err.Error())})
+		logger.Log(kv{"fn": "meta_store_auth", "error": err.Error()})
 		return false
 	}
 	return LdapBind(dn, password)
 }
 
 func findUserDn(user string) (string, error) {
-	fltr := fmt.Sprintf("(&(objectClass=%s)(%s=%s))", Config.Ldap.UserObjectClass, Config.Ldap.UserCn, user)
-	//	m := fmt.Sprintf("LDAP Search Host '%s' Filter '%s' base '%s'\n", ldapHost().String(), fltr, Config.Ldap.Base)
+	//	fmt.Printf("Looking for user '%s'\n", user)
+	fltr := fmt.Sprintf("(&(objectclass=%s)(%s=%s))", Config.Ldap.UserObjectClass, Config.Ldap.UserCn, user)
+	//	m := fmt.Sprintf("LDAP Search \"ldapsearch -x -H '%s' -b '%s' '%s'\"\n", Config.Ldap.Server, Config.Ldap.Base, fltr)
 	//	logger.Log(kv{"fn": "meta_store_auth.findUserDn", "msg": m})
-	base := fmt.Sprintf("%s=%s,%s", Config.Ldap.UserCn, user, Config.Ldap.Base)
 	search := &ldap.SearchRequest{
-		BaseDN: base,
-		Filter: fltr,
+		BaseDN:     Config.Ldap.Base,
+		Filter:     fltr,
+		Scope:      1,
+		Attributes: []string{"dn"},
 	}
 	r, err := LdapSearch(search)
 	if err != nil {
@@ -95,7 +115,6 @@ func findUserDn(user string) (string, error) {
 		return "", err
 	}
 	if len(r.Entries) > 0 {
-		//		logger.Log(kv{"fn": "meta_store_auth.findUserDn", "Found DN": r.Entries[0].DN})
 		return r.Entries[0].DN, nil
 	}
 	return "", errLdapUserNotFound

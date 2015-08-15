@@ -316,7 +316,7 @@ func baseUrl() string {
 
 func TestMain(m *testing.M) {
 	os.Remove("lfs-test.db")
-
+	Config.Ldap.Enabled = false
 	var err error
 	testMetaStore, err = NewMetaStore(Config.MetaDB)
 	if err != nil {

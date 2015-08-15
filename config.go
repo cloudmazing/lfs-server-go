@@ -30,6 +30,8 @@ type LdapConfig struct {
 	Base            string
 	UserObjectClass string
 	UserCn          string
+	BindDn          string
+	BindPass        string
 }
 
 type RedisConfig struct {
@@ -90,7 +92,7 @@ func init() {
 	awsConfig := &AwsConfig{AccessKeyId: "", SecretAccessKey: "", Region: "USWest",
 		BucketName: "lfs-server-go-objects", BucketAcl: "bucket-owner-full-control"}
 	ldapConfig := &LdapConfig{Enabled: false, Server: "ldap://localhost:1389", Base: "dc=testers,c=test,o=company",
-		UserObjectClass: "(&(objectclass=person))", UserCn: "uid"}
+		UserObjectClass: "person", UserCn: "uid", BindDn: "", BindPass: ""}
 	cassandraConfig := &CassandraConfig{Hosts: "localhost", Keyspace: "lfs_server_go", Username: "", Password: ""}
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",

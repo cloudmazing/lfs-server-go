@@ -85,6 +85,7 @@ func TestPuthWithoutAuth(t *testing.T) {
 }
 
 func setupMeta() {
+	Config.Ldap.Enabled = false
 	store, err := NewMetaStore("test-meta-store.db")
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
