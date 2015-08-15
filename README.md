@@ -10,7 +10,6 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
 
 1. This server uses the same base directory for all objects
 1. The meta store is offloaded to 
-  * Redis
   * BoltDB
   * Cassandra
 1. There is a notion of project -\> OID membership, which is lacking from the original.  This is wired up but still a WIP. It will allow for validating a user's membership to a project and the project's associated OID to the user, thus ensuring a user's access to a project will allow for access to an OID
@@ -21,7 +20,7 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
 Alternatively, use the Go installer:
 
 ```
-  $ go install github.com/memikequinn/lfs-server-go
+  $ go install github.com/cloudmazing/lfs-server-go
 ```
 
 ## Building
@@ -29,7 +28,7 @@ Alternatively, use the Go installer:
 To build from source, use the Go tools:
 
 ```
-  $ go get github.com/memikequinn/lfs-server-go
+  $ go get github.com/cloudmazing/lfs-server-go
 ```
 
 
