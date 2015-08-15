@@ -1,14 +1,15 @@
 LFS Server Go\!
 ======
+# NOT yet ready for primetime and is going through some iterations, specifically regarding access control.
 
 [lfs]: https://github.com/github/git-lfs
 [api]: https://github.com/github/git-lfs/blob/master/docs/api.md
 
-LFS Server Go\! is an example server that implements the [Git LFS API](https://github.com/github/git-lfs/tree/master/docs/api) 
+LFS Server Go\! a server that implements the [Git LFS API](https://github.com/github/git-lfs/tree/master/docs/api) 
 
 This is based off of [lfs-test-server](https://github.com/github/lfs-test-server)  
 
-1. This server uses the same base directory for all objects
+1. This server provides access to 
 1. The meta store is offloaded to 
   * BoltDB
   * Cassandra
