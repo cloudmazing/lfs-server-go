@@ -34,13 +34,6 @@ type LdapConfig struct {
 	BindPass        string
 }
 
-type RedisConfig struct {
-	Host     string
-	Port     int64
-	Password string
-	DB       int64
-}
-
 // Configuration holds application configuration. Values will be pulled from
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
@@ -62,7 +55,6 @@ type Configuration struct {
 	Aws          *AwsConfig
 	Cassandra    *CassandraConfig
 	Ldap         *LdapConfig
-	Redis        *RedisConfig
 }
 
 func (c *Configuration) IsHTTPS() bool {
@@ -116,25 +108,6 @@ func init() {
 	err = cfg.Section("Aws").MapTo(configuration.Aws)
 	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
 	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
-	// We have to do redis differently because the ini lib
-	// tries to make int64 into time structs
-	redis := cfg.Section("Redis").KeysHash()
-	db, err := cfg.Section("Redis").GetKey("DB")
-	if err != nil {
-		cfg.Section("Redis").NewKey("DB", "0")
-		db, _ = cfg.Section("Redis").GetKey("DB")
-	}
-	port, err := cfg.Section("Redis").GetKey("Port")
-	if err != nil {
-		cfg.Section("Redis").NewKey("Port", "6379")
-		port, _ = cfg.Section("Redis").GetKey("Port")
-	}
-	configuration.Redis = &RedisConfig{
-		Host:     redis["Host"],
-		Password: redis["Password"],
-		DB:       db.MustInt64(0),
-		Port:     port.MustInt64(6379),
-	}
 	Config = configuration
 
 }

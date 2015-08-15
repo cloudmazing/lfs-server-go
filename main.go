@@ -62,9 +62,6 @@ func wrapHttps(l net.Listener, cert, key string) (net.Listener, error) {
 
 func findMetaStore() (GenericMetaStore, error) {
 	switch Config.BackingStore {
-	case "redis":
-		m, err := NewRedisMetaStore()
-		return m, err
 	case "bolt":
 		m, err := NewMetaStore(Config.MetaDB)
 		return m, err

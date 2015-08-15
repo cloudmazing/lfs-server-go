@@ -22,21 +22,12 @@ Public = false
 ContentPath = lfs_content
 ;ContentStore options are [aws,filesystem]
 ContentStore = aws
-; BackingStore options are [cassandra, redis, bolt]
+; BackingStore options are [cassandra, bolt]
 ; bolt requires no external services
 BackingStore = cassandra
 ; NumProcs defaults to the number of processors available to the system
 ; based on what runtime.NumCPU() returns
 ; NumProcs = <some number>
-
-; Redis is optional
-[Redis]
-; Optional - for storing meta content in Redis
-Host = localhost
-;Port = 6379
-;DB = 0
-; optional
-;Password =
 
 ; Cassandra section is optional - but suggested for large deployments
 [Cassandra]

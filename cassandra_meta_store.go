@@ -333,7 +333,7 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 
 	match, err := checkPass([]byte(mu.Password), []byte(password))
 	if err != nil {
-		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
 	}
 	return match
 }

@@ -263,7 +263,7 @@ func (s *MetaStore) authenticate(authorization string) bool {
 	})
 	match, err := checkPass([]byte(value), []byte(password))
 	if err != nil {
-		logger.Log(kv{"fn": "redis_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
+		logger.Log(kv{"fn": "meta_store.authenticate", "msg": fmt.Sprintf("Decrypt error: %s", err.Error())})
 	}
 	return match
 }
