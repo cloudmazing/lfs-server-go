@@ -14,7 +14,15 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
   * BoltDB
   * Cassandra
 1. There is a notion of project -\> OID membership, which is lacking from the original.  This is wired up but still a WIP. It will allow for validating a user's membership to a project and the project's associated OID to the user, thus ensuring a user's access to a project will allow for access to an OID
-1. TODO: Remove/Clean up old objects on delete
+
+##TODO:
+1. Update access
+  * Rename user to namespace
+  * Implement namespace and project based access
+1. Remove/Clean up old objects on delete
+1. When an object is public and AWS is enabled, offload GETs directly to AWS
+1. Adopt [verification of uploads](https://github.com/github/git-lfs/tree/master/docs/api#verification)
+1. Redo the UI so it looks better  
 
 ## Installing
 
@@ -89,4 +97,11 @@ NOTE: If using https with a self signed cert also disable cert checking in the c
 		sslfverify = false
 
 ```
+
+## Security Design
+
+Namespaces -\> projects
+Users are given access to a namespace: read, write, or both
+Users are given access to a project: read, write, or both
+
 
