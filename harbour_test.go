@@ -13,7 +13,7 @@ import (
 )
 
 func TestGetAuthed(t *testing.T) {
-	req, err := http.NewRequest("GET", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("GET", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -40,7 +40,7 @@ func TestGetAuthed(t *testing.T) {
 }
 
 func TestGetUnauthed(t *testing.T) {
-	req, err := http.NewRequest("GET", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("GET", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -57,7 +57,7 @@ func TestGetUnauthed(t *testing.T) {
 }
 
 func TestGetMetaAuthed(t *testing.T) {
-	req, err := http.NewRequest("GET", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("GET", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -87,13 +87,13 @@ func TestGetMetaAuthed(t *testing.T) {
 
 	download := meta.Links["download"]
 
-	if download.Href != baseUrl()+"/user/repo/objects/"+contentOid {
+	if download.Href != baseUrl()+"/namespace/repo/objects/"+contentOid {
 		t.Fatalf("expected download link, got %s", download.Href)
 	}
 }
 
 func TestGetMetaUnauthed(t *testing.T) {
-	req, err := http.NewRequest("GET", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("GET", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -110,7 +110,7 @@ func TestGetMetaUnauthed(t *testing.T) {
 }
 
 func TestPostAuthedNewObject(t *testing.T) {
-	req, err := http.NewRequest("POST", lfsServer.URL+"/user/repo/objects", nil)
+	req, err := http.NewRequest("POST", lfsServer.URL+"/namespace/repo/objects", nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -150,13 +150,13 @@ func TestPostAuthedNewObject(t *testing.T) {
 		t.Fatal("expected upload link to be present")
 	}
 
-	if upload.Href != baseUrl()+"/user/repo/objects/"+nonexistingOid {
+	if upload.Href != baseUrl()+"/namespace/repo/objects/"+nonexistingOid {
 		t.Fatalf("expected upload link, got %s", upload.Href)
 	}
 }
 
 func TestPostAuthedExistingObject(t *testing.T) {
-	req, err := http.NewRequest("POST", lfsServer.URL+"/user/repo/objects", nil)
+	req, err := http.NewRequest("POST", lfsServer.URL+"/namespace/repo/objects", nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -188,7 +188,7 @@ func TestPostAuthedExistingObject(t *testing.T) {
 	}
 
 	download := meta.Links["download"]
-	if download.Href != baseUrl()+"/user/repo/objects/"+contentOid {
+	if download.Href != baseUrl()+"/namespace/repo/objects/"+contentOid {
 		t.Fatalf("expected download link, got %s", download.Href)
 	}
 
@@ -197,13 +197,13 @@ func TestPostAuthedExistingObject(t *testing.T) {
 		t.Fatalf("expected upload link to be present")
 	}
 
-	if upload.Href != baseUrl()+"/user/repo/objects/"+contentOid {
+	if upload.Href != baseUrl()+"/namespace/repo/objects/"+contentOid {
 		t.Fatalf("expected upload link, got %s", upload.Href)
 	}
 }
 
 func TestPostUnauthed(t *testing.T) {
-	req, err := http.NewRequest("POST", lfsServer.URL+"/user/repo/objects", nil)
+	req, err := http.NewRequest("POST", lfsServer.URL+"/namespace/repo/objects", nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -223,7 +223,7 @@ func TestPostUnauthed(t *testing.T) {
 }
 
 func TestPut(t *testing.T) {
-	req, err := http.NewRequest("PUT", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("PUT", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
@@ -257,7 +257,7 @@ func TestPut(t *testing.T) {
 func TestMediaTypesRequired(t *testing.T) {
 	m := []string{"GET", "PUT", "POST", "HEAD"}
 	for _, method := range m {
-		req, err := http.NewRequest(method, lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+		req, err := http.NewRequest(method, lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 		if err != nil {
 			t.Fatalf("request error: %s", err)
 		}
@@ -274,7 +274,7 @@ func TestMediaTypesRequired(t *testing.T) {
 }
 
 func TestMediaTypesParsed(t *testing.T) {
-	req, err := http.NewRequest("GET", lfsServer.URL+"/user/repo/objects/"+contentOid, nil)
+	req, err := http.NewRequest("GET", lfsServer.URL+"/namespace/repo/objects/"+contentOid, nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
