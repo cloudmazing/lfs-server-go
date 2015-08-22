@@ -16,7 +16,9 @@ var awsContentStore *AwsContentStore
 func TestAwsContentStorePut(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := &MetaObject{
 		Oid:  "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72",
 		Size: 12,
@@ -36,7 +38,9 @@ func TestAwsContentStorePut(t *testing.T) {
 func TestAwsContentStorePutHashMismatch(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := &MetaObject{
 		Oid:  "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72",
 		Size: 12,
@@ -52,7 +56,9 @@ func TestAwsContentStorePutHashMismatch(t *testing.T) {
 func TestAwsContentStorePutSizeMismatch(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := &MetaObject{
 		Oid:  "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72",
 		Size: 14,
@@ -69,7 +75,9 @@ func TestAwsContentStorePutSizeMismatch(t *testing.T) {
 func TestAwsContentStoreGet(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := &MetaObject{
 		Oid:  "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72",
 		Size: 12,
@@ -95,7 +103,9 @@ func TestAwsContentStoreGet(t *testing.T) {
 func TestAwsContentStoreGetNonExisting(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	_, err := awsContentStore.Get(&MetaObject{Oid: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
 	if err == nil {
 		t.Fatalf("expected to get an error, but content existed")
@@ -105,7 +115,9 @@ func TestAwsContentStoreGetNonExisting(t *testing.T) {
 func TestAwsContentStoreExists(t *testing.T) {
 	setupAwsTest()
 	defer teardownAwsTest()
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := &MetaObject{
 		Oid:  "6ae8a75555209fd6c44157c0aed8016e763ff435a19cf186f76863140143ff72",
 		Size: 12,
