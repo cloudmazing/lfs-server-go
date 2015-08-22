@@ -16,7 +16,7 @@ func TestNewLdapConnection(t *testing.T) {
 	defer tearDownMetaAuth()
 	lh, err := ldapHost()
 	if err != nil {
-		t.Errorf("Unable to process LDAP host", err.Error())
+		t.Errorf("Unable to process LDAP host %s", err.Error())
 	}
 	if lh.Host != "localhost:1389" {
 		t.Errorf("Wrong ldap host. expected localhost but got %s", lh.Host)

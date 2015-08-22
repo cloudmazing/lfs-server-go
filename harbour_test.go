@@ -151,7 +151,7 @@ func TestPostAuthedNewObject(t *testing.T) {
 	}
 
 	if upload.Href != baseUrl()+"/namespace/repo/objects/"+nonexistingOid {
-		t.Fatalf("expected upload link, got %s", upload.Href)
+		t.Fatalf("expected upload link to be %s, got %s", baseUrl()+"/namespace/repo/objects/"+nonexistingOid, upload.Href)
 	}
 }
 
@@ -189,7 +189,7 @@ func TestPostAuthedExistingObject(t *testing.T) {
 
 	download := meta.Links["download"]
 	if download.Href != baseUrl()+"/namespace/repo/objects/"+contentOid {
-		t.Fatalf("expected download link, got %s", download.Href)
+		t.Fatalf("expected download link to be %s, got %s", baseUrl()+"/namespace/repo/objects/"+contentOid, download.Href)
 	}
 
 	upload, ok := meta.Links["upload"]

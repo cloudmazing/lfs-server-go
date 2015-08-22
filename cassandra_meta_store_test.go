@@ -173,7 +173,7 @@ func TestCassandraOids(t *testing.T) {
 
 	mos, mosErr := metaStoreTestCassandra.Objects()
 	if mosErr != nil {
-		t.Errorf("error was raised when trying to fetch objects", mosErr.Error())
+		t.Errorf("error was raised when trying to fetch objects %s", mosErr.Error())
 	}
 	if len(mos) == 0 {
 		t.Errorf("No objects where found, at least 1 was expected")
@@ -260,7 +260,7 @@ func TestProjectOidRelationship(t *testing.T) {
 	}
 	err = metaStoreTestCassandra.removeOidFromProject(contentOid, testRepo)
 	if err != nil {
-		t.Errorf("Failed removing OID from project", err.Error())
+		t.Errorf("Failed removing OID from project %s", err.Error())
 	}
 }
 

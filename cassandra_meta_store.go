@@ -327,13 +327,13 @@ func (self *CassandraMetaStore) authenticate(authorization string) bool {
 	}
 	mu, err := self.findUser(user)
 	if err != nil {
-		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Auth error: %S", err.Error())})
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Auth error: %s", err.Error())})
 		return false
 	}
 
 	match, err := checkPass([]byte(mu.Password), []byte(password))
 	if err != nil {
-		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Decrypt error: %S", err.Error())})
+		logger.Log(kv{"fn": "cassandra_meta_store", "msg": fmt.Sprintf("Decrypt error: %s", err.Error())})
 	}
 	return match
 }
