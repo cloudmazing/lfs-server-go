@@ -85,6 +85,61 @@ func (s *MetaStore) Get(rv *RequestVars) (*MetaObject, error) {
 	return &meta, nil
 }
 
+func (s *MetaStore) findProject(projectName string) (*MetaProject, error) {
+	// var projects []*MetaProject
+	var project *MetaProject
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(projectsBucket)
+		if bucket == nil {
+			return errNoBucket
+		}
+		val := bucket.Get([]byte(projectName))
+		if len(val) < 1 {
+			return errProjectNotFound
+		}
+		dec := gob.NewDecoder(bytes.NewBuffer(val))
+		return dec.Decode(&project)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if project.Name != "" {
+		return project, nil
+	}
+	return nil, errProjectNotFound
+}
+
+// Currently the OIDS are nil
+func (s *MetaStore) createProject(rv *RequestVars) error {
+	if _, err := s.findProject(rv.Repo); err == nil {
+		// already there
+		return nil
+	}
+
+	if rv.Repo == "" {
+		return nil
+	}
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(projectsBucket)
+		if bucket == nil {
+			// should never get here unless the db is jacked
+			return errNoBucket
+		}
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		meta := MetaProject{Name: rv.Repo, Oids: []string{rv.Oid}}
+		err := enc.Encode(meta)
+		// Just a bunch o keys
+		err = bucket.Put([]byte(rv.Repo), buf.Bytes())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	return err
+}
+
 // Put writes meta information from RequestVars to the store.
 func (s *MetaStore) Put(rv *RequestVars) (*MetaObject, error) {
 	if !s.authenticate(rv.Authorization) {
@@ -99,10 +154,18 @@ func (s *MetaStore) Put(rv *RequestVars) (*MetaObject, error) {
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: rv.Oid, Size: rv.Size}
+	meta := MetaObject{Oid: rv.Oid, Size: rv.Size, ProjectNames: []string{rv.Repo}}
 	err := enc.Encode(meta)
 	if err != nil {
 		return nil, err
+	}
+	// create the project first, if we can
+	if rv.Repo != "" {
+		err := s.createProject(rv)
+		if err != nil {
+			logger.Log(kv{"fn": "Put", "err": err.Error()})
+			return nil, err
+		}
 	}
 
 	err = s.db.Update(func(tx *bolt.Tx) error {
@@ -145,13 +208,11 @@ func (s *MetaStore) AddUser(user, pass string) error {
 		if err != nil {
 			return err
 		}
-		err = bucket.Put([]byte(user), []byte(encryptedPass))
-		if err != nil {
-			return err
+		if val := bucket.Get([]byte(user)); len(val) > 0 {
+			return nil // Already there
 		}
-		return nil
+		return bucket.Put([]byte(user), []byte(encryptedPass))
 	})
-
 	return err
 }
 
@@ -218,7 +279,6 @@ func (s *MetaStore) Objects() ([]*MetaObject, error) {
 		})
 		return nil
 	})
-
 	return objects, err
 }
 
@@ -269,5 +329,24 @@ func (s *MetaStore) authenticate(authorization string) bool {
 }
 
 func (s *MetaStore) Projects() ([]*MetaProject, error) {
-	return []*MetaProject{}, nil
+	var projects []*MetaProject
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(projectsBucket)
+		if bucket == nil {
+			return errNoBucket
+		}
+
+		bucket.ForEach(func(k, v []byte) error {
+			var meta MetaProject
+			dec := gob.NewDecoder(bytes.NewBuffer(v))
+			err := dec.Decode(&meta)
+			if err != nil {
+				return err
+			}
+			projects = append(projects, &meta)
+			return nil
+		})
+		return nil
+	})
+	return projects, err
 }

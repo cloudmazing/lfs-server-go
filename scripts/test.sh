@@ -23,7 +23,7 @@ for p in $prereqs; do
   fi
 done
 go fmt
-go test -coverprofile=$base/coverage/cover.out -covermode=count
+go test -coverprofile=$base/coverage/cover.out -covermode=count $*
 go tool cover -html=$base/coverage/cover.out
 resp=$?
 

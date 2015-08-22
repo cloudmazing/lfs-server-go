@@ -15,22 +15,3 @@ var (
 	errNotImplemented      = errors.New("Not Implemented when using LDAP")
 	errMissingParams       = errors.New("Missing params")
 )
-
-func isErrObjectNotFound(err error) bool {
-	type errObjectNotFound interface {
-		errObjectNotFound() bool
-	}
-	if ae, ok := err.(errObjectNotFound); ok {
-		return ae.errObjectNotFound()
-	}
-	return false
-}
-func isErrProjectNotFound(err error) bool {
-	type errProjectNotFound interface {
-		errProjectNotFound() bool
-	}
-	if ae, ok := err.(errProjectNotFound); ok {
-		return ae.errProjectNotFound()
-	}
-	return false
-}

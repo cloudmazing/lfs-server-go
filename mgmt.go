@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/gorilla/mux"
 	"html/template"
 	"io"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -31,6 +33,7 @@ func (a *App) addMgmt(r *mux.Router) {
 	r.HandleFunc("/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
 	r.HandleFunc("/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
+	r.HandleFunc("/mgmt/searchOid", basicAuth(a.searchOidHandler)).Methods("GET")
 
 	cssBox = rice.MustFindBox("mgmt/css")
 	jsBox = rice.MustFindBox("mgmt/js")
@@ -98,15 +101,58 @@ func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *App) searchOidHandler(w http.ResponseWriter, r *http.Request) {
+	searchedOid := r.URL.Query().Get("oid")
+	if len(searchedOid) < 1 {
+		writeStatus(w, r, 404)
+	}
+	sess := NewCassandraSession()
+	defer sess.Client.Close()
+	cs, err := NewCassandraMetaStore(sess)
+	if err != nil {
+		writeStatus(w, r, 404)
+	}
+	oids, err := cs.findAllOids()
+	if err != nil {
+		writeStatus(w, r, 404)
+	}
+	for _, oid := range oids {
+		if strings.Contains(oid.Oid, searchedOid) {
+			w.Header().Set("Content-Type", "application/json")
+			_json, err := json.Marshal(oid)
+			if err != nil {
+				writeStatus(w, r, 500)
+			}
+			w.Write(_json)
+		}
+	}
+}
+
 func (a *App) objectsHandler(w http.ResponseWriter, r *http.Request) {
 	objects, err := a.metaStore.Objects()
 	if err != nil {
 		fmt.Fprintf(w, "Error retrieving objects: %s", err)
 		return
 	}
-
-	if err := render(w, "objects.tmpl", pageData{Name: "objects", Objects: objects}); err != nil {
-		writeStatus(w, r, 404)
+	var isJson bool
+	isJson = false
+	for _, t := range r.Header["Accept"] {
+		if strings.Contains(t, "application/json") {
+			isJson = true
+		}
+	}
+	if isJson {
+		// fmt.Println(r.Header)
+		w.Header().Set("Content-Type", "application/json")
+		_json, err := json.Marshal(objects)
+		if err != nil {
+			writeStatus(w, r, 500)
+		}
+		w.Write(_json)
+	} else {
+		if err := render(w, "objects.tmpl", pageData{Name: "objects", Objects: objects}); err != nil {
+			writeStatus(w, r, 404)
+		}
 	}
 }
 
@@ -116,9 +162,24 @@ func (a *App) projectsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error retrieving objects: %s", err)
 		return
 	}
-
-	if err := render(w, "projects.tmpl", pageData{Name: "projects", Projects: projects}); err != nil {
-		writeStatus(w, r, 404)
+	var isJson bool
+	isJson = false
+	for _, t := range r.Header["Accept"] {
+		if strings.Contains(t, "application/json") {
+			isJson = true
+		}
+	}
+	if isJson {
+		w.Header().Set("Content-Type", "application/json")
+		_json, err := json.Marshal(projects)
+		if err != nil {
+			writeStatus(w, r, 500)
+		}
+		w.Write(_json)
+	} else {
+		if err := render(w, "projects.tmpl", pageData{Name: "projects", Projects: projects}); err != nil {
+			writeStatus(w, r, 404)
+		}
 	}
 }
 
