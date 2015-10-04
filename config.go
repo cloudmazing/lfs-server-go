@@ -75,7 +75,7 @@ var Config = &Configuration{}
 func init() {
 	cfg, err := ini.Load("config.ini")
 	if err != nil {
-		panic(fmt.Sprint("unable to read config.ini, %v", err))
+		panic(fmt.Sprintf("unable to read config.ini, %v", err))
 	}
 	if GoEnv == "" {
 		GoEnv = "production"

@@ -21,6 +21,7 @@ type RequestVars struct {
 	Size          int64
 	User          string
 	Password      string
+	Namespace     string
 	Repo          string
 	Authorization string
 }
@@ -76,7 +77,7 @@ type GenericContentStore interface {
 
 // ObjectLink builds a URL linking to the object.
 func (v *RequestVars) ObjectLink() string {
-	path := fmt.Sprintf("/%s/%s/objects/%s", v.User, v.Repo, v.Oid)
+	path := fmt.Sprintf("/%s/%s/objects/%s", v.Namespace, v.Repo, v.Oid)
 
 	if Config.IsHTTPS() {
 		return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
@@ -104,13 +105,13 @@ func NewApp(content GenericContentStore, meta GenericMetaStore) *App {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/{user}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
-	route := "/{user}/{repo}/objects/{oid}"
+	r.HandleFunc("/{namespace}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	route := "/{namespace}/{repo}/objects/{oid}"
 	r.HandleFunc(route, app.GetContentHandler).Methods("GET", "HEAD").MatcherFunc(ContentMatcher)
 	r.HandleFunc(route, app.GetMetaHandler).Methods("GET", "HEAD").MatcherFunc(MetaMatcher)
 	r.HandleFunc(route, app.PutHandler).Methods("PUT").MatcherFunc(ContentMatcher)
 
-	r.HandleFunc("/{user}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	r.HandleFunc("/{namespace}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
 	app.addMgmt(r)
 	app.router = r
 
@@ -330,7 +331,7 @@ func MetaMatcher(r *http.Request, m *mux.RouteMatch) bool {
 func unpack(r *http.Request) *RequestVars {
 	vars := mux.Vars(r)
 	rv := &RequestVars{
-		User:          vars["user"],
+		Namespace:     vars["namespace"],
 		Repo:          vars["repo"],
 		Oid:           vars["oid"],
 		Authorization: r.Header.Get("Authorization"),
@@ -364,7 +365,7 @@ func unpackbatch(r *http.Request) *BatchVars {
 	}
 
 	for i := 0; i < len(bv.Objects); i++ {
-		bv.Objects[i].User = vars["user"]
+		bv.Objects[i].Namespace = vars["namespace"]
 		bv.Objects[i].Repo = vars["repo"]
 		bv.Objects[i].Authorization = r.Header.Get("Authorization")
 	}
