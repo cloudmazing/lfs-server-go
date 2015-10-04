@@ -103,7 +103,7 @@ func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
 			writeStatus(w, r, 500)
 		}
 		w.Write(_json)
-	}else {
+	} else {
 		if err := render(w, "config.tmpl", pageData{Name: "index", Config: Config, ConfigDump: Config.DumpConfig()}); err != nil {
 			writeStatus(w, r, 404)
 		}
@@ -192,7 +192,7 @@ func (a *App) usersHandler(w http.ResponseWriter, r *http.Request) {
 			writeStatus(w, r, 500)
 		}
 		w.Write(_json)
-	}else {
+	} else {
 		if err := render(w, "users.tmpl", pageData{Name: "users", Users: users}); err != nil {
 			writeStatus(w, r, 404)
 		}

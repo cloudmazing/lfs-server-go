@@ -17,7 +17,7 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
 
 ##TODO:
 1. Update access
-  * Rename user to namespace
+  * ~~Rename user to namespace~~
   * Implement namespace and project based access
 1. Remove/Clean up old objects on delete
 1. When an object is public and AWS is enabled, offload GETs directly to AWS
