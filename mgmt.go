@@ -96,8 +96,17 @@ func basicAuth(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
-	if err := render(w, "config.tmpl", pageData{Name: "index", Config: Config, ConfigDump: Config.DumpConfig()}); err != nil {
-		writeStatus(w, r, 404)
+	if isJson(r) {
+		w.Header().Set("Content-Type", "application/json")
+		_json, err := json.Marshal(pageData{Name: "index", Config: Config, ConfigDump: Config.DumpConfig()})
+		if err != nil {
+			writeStatus(w, r, 500)
+		}
+		w.Write(_json)
+	} else {
+		if err := render(w, "config.tmpl", pageData{Name: "index", Config: Config, ConfigDump: Config.DumpConfig()}); err != nil {
+			writeStatus(w, r, 404)
+		}
 	}
 }
 
@@ -134,14 +143,7 @@ func (a *App) objectsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error retrieving objects: %s", err)
 		return
 	}
-	var isJson bool
-	isJson = false
-	for _, t := range r.Header["Accept"] {
-		if strings.Contains(t, "application/json") {
-			isJson = true
-		}
-	}
-	if isJson {
+	if isJson(r) {
 		// fmt.Println(r.Header)
 		w.Header().Set("Content-Type", "application/json")
 		_json, err := json.Marshal(objects)
@@ -162,14 +164,7 @@ func (a *App) projectsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error retrieving objects: %s", err)
 		return
 	}
-	var isJson bool
-	isJson = false
-	for _, t := range r.Header["Accept"] {
-		if strings.Contains(t, "application/json") {
-			isJson = true
-		}
-	}
-	if isJson {
+	if isJson(r) {
 		w.Header().Set("Content-Type", "application/json")
 		_json, err := json.Marshal(projects)
 		if err != nil {
@@ -190,8 +185,17 @@ func (a *App) usersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := render(w, "users.tmpl", pageData{Name: "users", Users: users}); err != nil {
-		writeStatus(w, r, 404)
+	if isJson(r) {
+		w.Header().Set("Content-Type", "application/json")
+		_json, err := json.Marshal(users)
+		if err != nil {
+			writeStatus(w, r, 500)
+		}
+		w.Write(_json)
+	} else {
+		if err := render(w, "users.tmpl", pageData{Name: "users", Users: users}); err != nil {
+			writeStatus(w, r, 404)
+		}
 	}
 }
 
@@ -241,4 +245,15 @@ func render(w http.ResponseWriter, tmpl string, data pageData) error {
 	t.New("content").Parse(contentString)
 
 	return t.Execute(w, data)
+}
+
+func isJson(r *http.Request) bool {
+	var isJson bool
+	isJson = false
+	for _, t := range r.Header["Accept"] {
+		if strings.Contains(t, "application/json") {
+			isJson = true
+		}
+	}
+	return isJson
 }

@@ -216,7 +216,9 @@ func TestPostUnauthed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("response error: %s", err)
 	}
-
+	if len(res.Header["Lfs-Authenticate"]) < 0 {
+		t.Fatalf("expected auth to be requested but it was not")
+	}
 	if res.StatusCode != 401 {
 		t.Fatalf("expected status 401, got %d", res.StatusCode)
 	}

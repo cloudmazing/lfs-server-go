@@ -88,4 +88,38 @@ func TestMgmtGetProjects_Json(t *testing.T) {
 	if !good {
 		t.Errorf("expected project name to be %+v, got %+v", testRepo, meta)
 	}
+
+}
+
+func TestMgmtGetUsers_Json(t *testing.T) {
+	err := testMetaStore.AddUser(testUser, testPass)
+	if err != nil {
+		fmt.Println("got an err adding user", err.Error())
+	}
+	req, err := http.NewRequest("GET", lfsServer.URL+"/mgmt/users", nil)
+	if err != nil {
+		t.Fatalf("request error: %s", err)
+	}
+	header := map[string][]string{"Accept": {"application/json"}, "Accept-Encoding": {"gzip", "text"}}
+	req.Header = header
+	req.SetBasicAuth(testUser, testPass)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("response error: %s", err)
+	}
+	var meta *MetaUser
+	var metas []*MetaUser
+	data, _ := ioutil.ReadAll(res.Body)
+	json.Unmarshal(data, &metas)
+	var good bool
+	good = false
+	for _, m := range metas {
+		if m.Name == testUser {
+			meta = m
+			good = true
+		}
+	}
+	if !good {
+		t.Errorf("expected project name to be %+v, got %+v", testRepo, meta)
+	}
 }
