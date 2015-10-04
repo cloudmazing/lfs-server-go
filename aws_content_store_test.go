@@ -138,6 +138,41 @@ func TestAwsContentStoreExists(t *testing.T) {
 	}
 }
 
+func TestAwsSettings(t *testing.T) {
+	setupAwsTest()
+	defer teardownAwsTest()
+	Config.Aws.BucketAcl = "private"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.Private {
+		t.Fatalf("Should have been set to private, but got %s", awsContentStore.acl)
+	}
+	Config.Aws.BucketAcl = "public-read"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.PublicRead {
+		t.Fatalf("Should have been set to public-read, but got %s", awsContentStore.acl)
+	}
+	Config.Aws.BucketAcl = "public-read-write"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.PublicReadWrite {
+		t.Fatalf("Should have been set to public-read-write, but got %s", awsContentStore.acl)
+	}
+	Config.Aws.BucketAcl = "authenticated-read"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.AuthenticatedRead {
+		t.Fatalf("Should have been set to authenticated-read, but got %s", awsContentStore.acl)
+	}
+	Config.Aws.BucketAcl = "bucket-owner-read"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.BucketOwnerRead {
+		t.Fatalf("Should have been set to bucket-owner-read, but got %s", awsContentStore.acl)
+	}
+	Config.Aws.BucketAcl = "bucket-owner-full-control"
+	awsContentStore.setAcl()
+	if awsContentStore.acl != s3.BucketOwnerFull {
+		t.Fatalf("Should have been set to bucket-owner-full-control, but got %s", awsContentStore.acl)
+	}
+}
+
 func awsConnectForTest() *s3.Bucket {
 	os.Setenv("AWS_ACCESS_KEY_ID", Config.Aws.AccessKeyId)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", Config.Aws.SecretAccessKey)

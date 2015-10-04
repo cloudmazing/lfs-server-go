@@ -22,6 +22,7 @@ type AwsContentStore struct {
 	bucket  *s3.Bucket
 	authId  string
 	authKey string
+	acl     s3.ACL
 }
 
 // NewContentStore creates a ContentStore at the base directory.
@@ -37,6 +38,7 @@ func NewAwsContentStore() (*AwsContentStore, error) {
 	bucket := client.Bucket(Config.Aws.BucketName)
 	self := &AwsContentStore{bucket: bucket, client: client}
 	self.makeBucket()
+	self.setAcl()
 	return self, nil
 }
 
@@ -95,7 +97,7 @@ func (s *AwsContentStore) Put(meta *MetaObject, r io.Reader) error {
 	if shaStr != meta.Oid {
 		return errHashMismatch
 	}
-	retStat := s.bucket.PutReader(path, bytes.NewReader(buf), meta.Size, ContentType, s3.PublicRead)
+	retStat := s.bucket.PutReader(path, bytes.NewReader(buf), meta.Size, ContentType, s.acl)
 	k, kerr := s.getMetaData(meta)
 	if kerr != nil {
 		logger.Log(kv{"fn": "AwsContentStore.Put", "err": ": " + kerr.Error()})
@@ -121,4 +123,29 @@ func (s *AwsContentStore) Exists(meta *MetaObject) bool {
 	}
 	// if the object is not there, a 404 error is raised
 	return true
+}
+
+func (s *AwsContentStore) setAcl() {
+	switch {
+	case Config.Aws.BucketAcl == "private":
+		s.acl = s3.Private
+		return
+	case Config.Aws.BucketAcl == "public-read":
+		s.acl = s3.PublicRead
+		return
+	case Config.Aws.BucketAcl == "public-read-write":
+		s.acl = s3.PublicReadWrite
+		return
+	case Config.Aws.BucketAcl == "authenticated-read":
+		s.acl = s3.AuthenticatedRead
+		return
+	case Config.Aws.BucketAcl == "bucket-owner-read":
+		s.acl = s3.BucketOwnerRead
+		return
+	case Config.Aws.BucketAcl == "bucket-owner-full-control":
+		s.acl = s3.BucketOwnerFull
+		return
+	}
+	s.acl = s3.Private
+	return
 }
