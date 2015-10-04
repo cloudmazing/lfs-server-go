@@ -14,3 +14,4 @@ test_read_dir
 testing_ldap
 aws_testing
 lfs-content-test/
+coverage/

@@ -357,6 +357,7 @@ func TestMain(m *testing.M) {
 
 func seedMetaStore() error {
 	if err := testMetaStore.AddUser(testUser, testPass); err != nil {
+		fmt.Println("Erred adding user", err.Error())
 		return err
 	}
 
