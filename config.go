@@ -99,7 +99,7 @@ func init() {
 		MetaDB:       "lfs-test.db",
 		BackingStore: "bolt",
 		ContentStore: "filesystem",
-		NumProcs:     runtime.NumCPU(),
+		NumProcs:     runtime.NumCPU() * 2,
 		Ldap:         ldapConfig,
 		Aws:          awsConfig,
 		Cassandra:    cassandraConfig,
