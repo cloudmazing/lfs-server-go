@@ -4,59 +4,60 @@ import (
 	"fmt"
 	"gopkg.in/ini.v1"
 	"os"
-	"reflect"
 	"runtime"
+	//"reflect"
+	"github.com/fatih/structs"
 	"strings"
 )
 
 type CassandraConfig struct {
-	Hosts    string
-	Keyspace string
-	Username string
-	Password string
-	Enabled  bool
+	Hosts    string `json:"hosts"`
+	Keyspace string `json:"keyspace"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Enabled  bool   `json:"enabled"`
 }
 
 type AwsConfig struct {
-	AccessKeyId     string
-	SecretAccessKey string
-	Region          string
-	BucketName      string
-	BucketAcl       string
-	Enabled         bool
+	AccessKeyId     string `json:"accesskeyid"`
+	SecretAccessKey string `json:"secretaccesskey"`
+	Region          string `json:"region"`
+	BucketName      string `json:"bucketname"`
+	BucketAcl       string `json:"bucketacl"`
+	Enabled         bool   `json:"enabled"`
 }
 
 type LdapConfig struct {
-	Enabled         bool
-	Server          string
-	Base            string
-	UserObjectClass string
-	UserCn          string
-	BindDn          string
-	BindPass        string
+	Enabled         bool   `json:"enabled"`
+	Server          string `json:"server"`
+	Base            string `json:"base"`
+	UserObjectClass string `json:"userobjectclass"`
+	UserCn          string `json:"usercn"`
+	BindDn          string `json:"binddn"`
+	BindPass        string `json:"bindpass"`
 }
 
 // Configuration holds application configuration. Values will be pulled from
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
 type Configuration struct {
-	Listen       string
-	Host         string
-	ContentPath  string
-	AdminUser    string
-	AdminPass    string
-	Cert         string
-	Key          string
-	Scheme       string
-	Public       bool
-	MetaDB       string
-	BackingStore string
-	ContentStore string
-	LogFile      string
-	NumProcs     int
-	Aws          *AwsConfig
-	Cassandra    *CassandraConfig
-	Ldap         *LdapConfig
+	Listen       string           `json:"listen"`
+	Host         string           `json:"host"`
+	ContentPath  string           `json:"contentpath"`
+	AdminUser    string           `json:"adminuser"`
+	AdminPass    string           `json:"adminpass"`
+	Cert         string           `json:"cert"`
+	Key          string           `json:"key"`
+	Scheme       string           `json:"scheme"`
+	Public       bool             `json:"public"`
+	MetaDB       string           `json:"metadb"`
+	BackingStore string           `json:"backingstore"`
+	ContentStore string           `json:"contentstore"`
+	LogFile      string           `json:"logfile"`
+	NumProcs     int              `json:"numprocs"`
+	Aws          *AwsConfig       `json:"aws"`
+	Cassandra    *CassandraConfig `json:"cassandra"`
+	Ldap         *LdapConfig      `json:"ldap"`
 }
 
 func (c *Configuration) IsHTTPS() bool {
@@ -132,12 +133,7 @@ func init() {
 	Config = configuration
 }
 
-func (c *Configuration) DumpConfig() map[string]string {
-	configDump := make(map[string]string)
-	for name, _ := range attributes(&Configuration{}) {
-		valueE := reflect.ValueOf(Config).Elem()
-		field := valueE.FieldByName(name)
-		configDump[name] = field.String()
-	}
-	return configDump
+func (c *Configuration) DumpConfig() map[string]interface{} {
+	m := structs.Map(Config)
+	return m
 }
