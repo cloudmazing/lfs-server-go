@@ -10,23 +10,23 @@ AdminPass = admin_password
 Cert = somekey.crt
 ; path to ssl key
 Key = somekey.key
-Scheme = https
+Scheme = http
 ; Should the contents be public?
 Public = false
 ; Database Configuration
 ; path to database file to use.
 ; Not used when both AWS storage and LDAP are enabled
-; MetaDB = lfs.db
+MetaDB = lfs.db
 ; Content Store Configuration
 ; Where to store the content on disk. Not used when AWS storage is enabled
 ContentPath = lfs_content
 ;ContentStore options are [aws,filesystem]
-ContentStore = aws
+ContentStore = filesystem
 ; BackingStore options are [cassandra, bolt]
 ; bolt requires no external services
-BackingStore = cassandra
+BackingStore = bolt
 ; NumProcs defaults to the number of processors available to the system
-; based on what runtime.NumCPU() returns
+; based on what runtime.NumCPU() * 2 returns
 ; NumProcs = <some number>
 
 ; Cassandra section is optional - but suggested for large deployments
@@ -45,7 +45,7 @@ Hosts = localhost
 ; LDAP configuration - Optional
 ;Server = ldap://localhost:1389
 ; true/false
-; Enabled = true
+Enabled = false
 ;Base = ou=people,o=mycompany
 ;UserObjectClass = person
 ;UserCn = uid
