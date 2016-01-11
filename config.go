@@ -14,6 +14,7 @@ type CassandraConfig struct {
 	Keyspace string
 	Username string
 	Password string
+	Enabled  bool
 }
 
 type AwsConfig struct {
@@ -22,6 +23,7 @@ type AwsConfig struct {
 	Region          string
 	BucketName      string
 	BucketAcl       string
+	Enabled         bool
 }
 
 type LdapConfig struct {
@@ -81,11 +83,30 @@ func init() {
 		GoEnv = "production"
 	}
 
-	awsConfig := &AwsConfig{AccessKeyId: "", SecretAccessKey: "", Region: "USWest",
-		BucketName: "lfs-server-go-objects", BucketAcl: "bucket-owner-full-control"}
-	ldapConfig := &LdapConfig{Enabled: false, Server: "ldap://localhost:1389", Base: "dc=testers,c=test,o=company",
-		UserObjectClass: "person", UserCn: "uid", BindDn: "", BindPass: ""}
-	cassandraConfig := &CassandraConfig{Hosts: "localhost", Keyspace: "lfs_server_go", Username: "", Password: ""}
+	awsConfig := &AwsConfig{
+		AccessKeyId:     "",
+		SecretAccessKey: "",
+		Region:          "USWest",
+		BucketName:      "lfs-server-go-objects",
+		BucketAcl:       "bucket-owner-full-control",
+		Enabled:         false,
+	}
+	ldapConfig := &LdapConfig{
+		Server:          "ldap://localhost:1389",
+		Base:            "dc=testers,c=test,o=company",
+		UserObjectClass: "person",
+		Enabled:         false,
+		UserCn:          "uid",
+		BindDn:          "",
+		BindPass:        "",
+	}
+	cassandraConfig := &CassandraConfig{
+		Hosts:    "localhost",
+		Keyspace: "lfs_server_go",
+		Username: "",
+		Password: "",
+		Enabled:  false,
+	}
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",
 		Host:         "localhost:8080",
@@ -109,7 +130,6 @@ func init() {
 	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
 	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
 	Config = configuration
-
 }
 
 func (c *Configuration) DumpConfig() map[string]string {
