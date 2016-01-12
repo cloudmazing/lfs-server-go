@@ -4,9 +4,9 @@ package gocql
 
 import (
 	"fmt"
+	"gopkg.in/inf.v0"
 	"reflect"
 	"sort"
-	"gopkg.in/inf.v0"
 	"testing"
 	"time"
 )

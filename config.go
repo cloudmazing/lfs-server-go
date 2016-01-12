@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/structs"
 	"gopkg.in/ini.v1"
 	"os"
 	"runtime"
-	"github.com/fatih/structs"
 	"strings"
 )
 
@@ -42,7 +42,7 @@ type LdapConfig struct {
 type Configuration struct {
 	Listen       string           `json:"listen"`
 	Host         string           `json:"host"`
-    UrlContext   string           `json:"url_context"`
+	UrlContext   string           `json:"url_context"`
 	ContentPath  string           `json:"content_path"`
 	AdminUser    string           `json:"admin_user"`
 	AdminPass    string           `json:"admin_pass"`
@@ -84,6 +84,14 @@ func init() {
 		GoEnv = "production"
 	}
 
+	//Force scheme to be a valid value
+	if cfg.Section("Main").HasKey("Scheme") {
+		val := cfg.Section("Main").Key("Scheme").String()
+		if val != "http" || val != "https" {
+			val = "http"
+		}
+	}
+
 	awsConfig := &AwsConfig{
 		AccessKeyId:     "",
 		SecretAccessKey: "",
@@ -111,7 +119,7 @@ func init() {
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",
 		Host:         "localhost:8080",
-        UrlContext:   "",
+		UrlContext:   "",
 		ContentPath:  "lfs-content",
 		AdminUser:    "admin",
 		AdminPass:    "admin",

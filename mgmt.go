@@ -27,29 +27,19 @@ type pageData struct {
 }
 
 func (a *App) addMgmt(r *mux.Router) {
-    mPath := Config.UrlContext + "/mgmt"
-    r.HandleFunc(mPath, basicAuth(a.indexHandler)).Methods("GET")
-    moPath := Config.UrlContext + "/mgmt/objects"
-    r.HandleFunc(moPath, basicAuth(a.objectsHandler)).Methods("GET")
-    mpPath := Config.UrlContext + "/mgmt/projects"
-    r.HandleFunc(mpPath, basicAuth(a.projectsHandler)).Methods("GET")
-    muPath := Config.UrlContext + "/mgmt/users"
-	r.HandleFunc(muPath, basicAuth(a.usersHandler)).Methods("GET")
-    maPath := Config.UrlContext + "/mgmt/add"
-	r.HandleFunc(maPath, basicAuth(a.addUserHandler)).Methods("POST")
-    mdPath := Config.UrlContext + "/mgmt/del"
-	r.HandleFunc(mdPath, basicAuth(a.delUserHandler)).Methods("POST")
-    msPath := Config.UrlContext + "/mgmt/searchOid"
-	r.HandleFunc(msPath, basicAuth(a.searchOidHandler)).Methods("GET")
+	r.HandleFunc("/mgmt", basicAuth(a.indexHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/objects", basicAuth(a.objectsHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/projects", basicAuth(a.projectsHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
+	r.HandleFunc("/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
+	r.HandleFunc("/mgmt/searchOid", basicAuth(a.searchOidHandler)).Methods("GET")
 
 	cssBox = rice.MustFindBox("mgmt/css")
 	jsBox = rice.MustFindBox("mgmt/js")
 	templateBox = rice.MustFindBox("mgmt/templates")
-    mcssPath := Config.UrlContext + "/mgmt/css/{file}"
-    fmt.Println(mcssPath)
-	r.HandleFunc(mcssPath, basicAuth(cssHandler))
-    mjsPath := Config.UrlContext + "/mgmt/js/{file}"
-	r.HandleFunc(mjsPath, basicAuth(jsHandler))
+	r.HandleFunc("/mgmt/css/{file}", basicAuth(cssHandler))
+	r.HandleFunc("/mgmt/js/{file}", basicAuth(jsHandler))
 }
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
@@ -221,9 +211,8 @@ func (a *App) addUserHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error adding user: %s", err)
 		return
 	}
-    
-    r_path := Config.UrlContext + "/mgmt/users"
-	http.Redirect(w, r, r_path, 302)
+
+	http.Redirect(w, r, "/mgmt/users", 302)
 }
 
 func (a *App) delUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -238,8 +227,7 @@ func (a *App) delUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    r_path := Config.UrlContext + "/mgmt/users"
-	http.Redirect(w, r, r_path, 302)
+	http.Redirect(w, r, "/mgmt/users", 302)
 }
 
 func render(w http.ResponseWriter, tmpl string, data pageData) error {
