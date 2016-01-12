@@ -79,11 +79,7 @@ type GenericContentStore interface {
 func (v *RequestVars) ObjectLink() string {
 	path := fmt.Sprintf("/%s/%s/objects/%s", v.Namespace, v.Repo, v.Oid)
 
-	if Config.IsHTTPS() {
-		return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
-	}
-
-	return fmt.Sprintf("http://%s%s", Config.Host, path)
+	return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
 }
 
 // link provides a structure used to build a hypermedia representation of an HTTP link.
@@ -113,8 +109,8 @@ func NewApp(content GenericContentStore, meta GenericMetaStore) *App {
 
 	r.HandleFunc("/{namespace}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
 	app.addMgmt(r)
+	http.Handle(Config.UrlContext, r)
 	app.router = r
-
 	return app
 }
 

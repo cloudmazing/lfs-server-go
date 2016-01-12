@@ -55,45 +55,44 @@ func (l *Conn) Bind(username, password string) error {
 }
 
 func (l *Conn) Unbind() error {
-  defer l.Close()
+	defer l.Close()
 
-  messageID := l.nextMessageID()
+	messageID := l.nextMessageID()
 
-  packet := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "LDAP Request")
-  packet.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, messageID, "MessageID"))
-  unbindRequest := ber.Encode(ber.ClassApplication, ber.TypePrimitive, ApplicationUnbindRequest, nil, "Unbind Request")
-  packet.AppendChild(unbindRequest)
+	packet := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "LDAP Request")
+	packet.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, messageID, "MessageID"))
+	unbindRequest := ber.Encode(ber.ClassApplication, ber.TypePrimitive, ApplicationUnbindRequest, nil, "Unbind Request")
+	packet.AppendChild(unbindRequest)
 
-  if l.Debug {
-    ber.PrintPacket(packet)
-  }
+	if l.Debug {
+		ber.PrintPacket(packet)
+	}
 
-  channel, err := l.sendMessage(packet)
-  if err != nil {
-    return err
-  }
-  if channel == nil {
-    return NewError(ErrorNetwork, errors.New("ldap: could not send message"))
-  }
-  defer l.finishMessage(messageID)
+	channel, err := l.sendMessage(packet)
+	if err != nil {
+		return err
+	}
+	if channel == nil {
+		return NewError(ErrorNetwork, errors.New("ldap: could not send message"))
+	}
+	defer l.finishMessage(messageID)
 
-  packet = <-channel
-  if packet == nil {
-    return NewError(ErrorNetwork, errors.New("ldap: could not retrieve response"))
-  }
+	packet = <-channel
+	if packet == nil {
+		return NewError(ErrorNetwork, errors.New("ldap: could not retrieve response"))
+	}
 
-  if l.Debug {
-    if err := addLDAPDescriptions(packet); err != nil {
-      return err
-    }
-    ber.PrintPacket(packet)
-  }
+	if l.Debug {
+		if err := addLDAPDescriptions(packet); err != nil {
+			return err
+		}
+		ber.PrintPacket(packet)
+	}
 
-  resultCode, resultDescription := getLDAPResultCode(packet)
-  if resultCode != 0 {
-    return NewError(resultCode, errors.New(resultDescription))
-  }
+	resultCode, resultDescription := getLDAPResultCode(packet)
+	if resultCode != 0 {
+		return NewError(resultCode, errors.New(resultDescription))
+	}
 
-  return nil
+	return nil
 }
-

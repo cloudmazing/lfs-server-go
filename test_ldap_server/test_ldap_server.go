@@ -2,12 +2,14 @@
 // Otherwise, the response is a failure
 // used for testing
 package main
+
 import (
 	"github.com/nmcclain/ldap"
 	"log"
 	"net"
 	"strings"
 )
+
 func main() {
 	s := ldap.NewServer()
 	handler := ldapHandler{}
@@ -29,15 +31,15 @@ type searchSimple struct {
 func (h ldapHandler) Bind(bindDN, bindSimplePw string, conn net.Conn) (ldap.LDAPResultCode, error) {
 	log.Printf("BindDN: %s, bindSimplePw: %s\n", bindDN, bindSimplePw)
 	s := searchSimple{}
-	req := ldap.SearchRequest{BaseDN:"o=testers,o=company", Filter: "(cn=admin*)"}
+	req := ldap.SearchRequest{BaseDN: "o=testers,o=company", Filter: "(cn=admin*)"}
 	result, err := s.Search(bindDN, req, conn)
 	if err != nil {
 		log.Println("Unable to find user", bindDN)
 		return ldap.LDAPResultInvalidCredentials, err
 	}
 	found := false
-	for i := 0; i < len(result.Entries) ; i++ {
-		if strings.Contains(result.Entries[i].DN, bindDN){
+	for i := 0; i < len(result.Entries); i++ {
+		if strings.Contains(result.Entries[i].DN, bindDN) {
 			log.Println("Found DN", result.Entries[i].DN)
 			found = true
 		}
