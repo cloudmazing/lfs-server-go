@@ -3,7 +3,7 @@
   <head>
     <title>LFS Server Go! Management</title>
     <style type="text/css">
-      @import "/mgmt/css/primer.css";
+      @import "{{.Config.UrlContext}}/mgmt/css/primer.css";
       .masthead{
         padding-top:1rem;
         padding-bottom:1rem;
@@ -16,8 +16,8 @@
         padding-bottom: 1rem;
       }
     </style>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-		<script src="/mgmt/js/mgmt.js"></script>
+		<script src="{{.Config.UrlContext}}/mgmt/js/jquery.min.js"></script>
+		<script src="{{.Config.UrlContext}}/mgmt/js/mgmt.js"></script>
   </head>
   <body>
     <header class="masthead">
@@ -30,10 +30,10 @@
       <div class="columns">
         <div class="one-fourth column">
           <nav class="menu">
-            <a class="menu-item {{if eq .Name "index"}}selected{{end}}" href="/mgmt">LFS Server</a>
-            <a class="menu-item {{if eq .Name "users"}}selected{{end}}" href="/mgmt/users">Users</a>
-            <a class="menu-item {{if eq .Name "objects"}}selected{{end}}" href="/mgmt/objects">Objects</a>
-            <a class="menu-item {{if eq .Name "projecs"}}selected{{end}}" href="/mgmt/projects">Projects</a>
+            <a class="menu-item {{if eq .Name "index"}}selected{{end}}" href="{{.Config.UrlContext}}/mgmt">LFS Server</a>
+            <a class="menu-item {{if eq .Name "users"}}selected{{end}}" href="{{.Config.UrlContext}}/mgmt/users">Users</a>
+            <a class="menu-item {{if eq .Name "objects"}}selected{{end}}" href="{{.Config.UrlContext}}/mgmt/objects">Objects</a>
+            <a class="menu-item {{if eq .Name "projecs"}}selected{{end}}" href="{{.Config.UrlContext}}/mgmt/projects">Projects</a>
           </nav>
         </div>
         <div class="three-fourths column">

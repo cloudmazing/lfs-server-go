@@ -5,7 +5,6 @@ import (
 	"gopkg.in/ini.v1"
 	"os"
 	"runtime"
-	//"reflect"
 	"github.com/fatih/structs"
 	"strings"
 )
@@ -43,16 +42,17 @@ type LdapConfig struct {
 type Configuration struct {
 	Listen       string           `json:"listen"`
 	Host         string           `json:"host"`
-	ContentPath  string           `json:"contentpath"`
-	AdminUser    string           `json:"adminuser"`
-	AdminPass    string           `json:"adminpass"`
+    UrlContext   string           `json:"url_context"`
+	ContentPath  string           `json:"content_path"`
+	AdminUser    string           `json:"admin_user"`
+	AdminPass    string           `json:"admin_pass"`
 	Cert         string           `json:"cert"`
 	Key          string           `json:"key"`
 	Scheme       string           `json:"scheme"`
 	Public       bool             `json:"public"`
 	MetaDB       string           `json:"metadb"`
-	BackingStore string           `json:"backingstore"`
-	ContentStore string           `json:"contentstore"`
+	BackingStore string           `json:"backing_store"`
+	ContentStore string           `json:"content_store"`
 	LogFile      string           `json:"logfile"`
 	NumProcs     int              `json:"numprocs"`
 	Aws          *AwsConfig       `json:"aws"`
@@ -73,7 +73,7 @@ func (c *Configuration) IsPublic() bool {
 var GoEnv = os.Getenv("GO_ENV")
 var Config = &Configuration{}
 
-// iterate thru config.yaml and parse it
+// iterate thru config.ini and parse it
 // always called when initializing Config
 func init() {
 	cfg, err := ini.Load("config.ini")
@@ -111,6 +111,7 @@ func init() {
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",
 		Host:         "localhost:8080",
+        UrlContext:   "",
 		ContentPath:  "lfs-content",
 		AdminUser:    "admin",
 		AdminPass:    "admin",

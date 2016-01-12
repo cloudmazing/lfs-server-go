@@ -2,7 +2,7 @@
   <p>To configure a repository to use this LFS server, add the following to the repository's <code>.gitconfig</code> file:</p>
   <pre>
   <code>[lfs]
-      url = "{{.Config.Scheme}}://{{.Config.Host}}/&lt;user&gt;/repo"
+      url = "{{.Config.Scheme}}://{{.Config.Host}}{{.Config.UrlContext}}/&lt;user&gt;/repo"
   </code>
   </pre>
 
@@ -23,7 +23,7 @@
       </tr>
       <tr>
         <td><strong>URL:</strong></td>
-        <td>{{.Config.Scheme}}://{{.Config.Host}}</td>
+        <td>{{.Config.Scheme}}://{{.Config.Host}}{{.Config.UrlContext}}</td>
       </tr>
       <tr>
           <td><strong>Listen Address:</strong></td>
@@ -60,7 +60,7 @@
           <td>LDAP Config</td>
       </tr>
     </table>
-  {{end}}
+  {{end}}      
   {{if .Config.Cassandra.Enabled}}
     <table>
       <tr>
