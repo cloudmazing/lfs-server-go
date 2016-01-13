@@ -13,6 +13,11 @@ Key = somekey.key
 Scheme = https
 ; Should the contents be public?
 Public = false
+
+; URL Context: for serving under a non-root location
+; When adding, omit any trailing /
+; i.e. /lfs (correct) vs. /lfs/ (incorrect)
+UrlContext = ""
 ; Database Configuration
 ; path to database file to use.
 ; Not used when both AWS storage and LDAP are enabled
