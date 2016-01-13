@@ -52,6 +52,7 @@ type Configuration struct {
 	ContentStore string
 	LogFile      string
 	NumProcs     int
+    UrlContext   string
 	Aws          *AwsConfig
 	Cassandra    *CassandraConfig
 	Ldap         *LdapConfig
@@ -92,6 +93,7 @@ func init() {
 		ContentPath:  "lfs-content",
 		AdminUser:    "admin",
 		AdminPass:    "admin",
+        UrlContext:   "",
 		Cert:         "",
 		Key:          "",
 		Scheme:       "http",

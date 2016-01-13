@@ -77,13 +77,10 @@ type GenericContentStore interface {
 
 // ObjectLink builds a URL linking to the object.
 func (v *RequestVars) ObjectLink() string {
-	path := fmt.Sprintf("/%s/%s/objects/%s", v.Namespace, v.Repo, v.Oid)
+	path := fmt.Sprintf("%s/%s/%s/objects/%s", Config.UrlContext, v.Namespace, v.Repo, v.Oid)
 
-	if Config.IsHTTPS() {
-		return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
-	}
-
-	return fmt.Sprintf("http://%s%s", Config.Host, path)
+    // we can assume that Config.Scheme is either http or https
+	return fmt.Sprintf("%s://%s%s", Config.Scheme, Config.Host, path)
 }
 
 // link provides a structure used to build a hypermedia representation of an HTTP link.
@@ -105,13 +102,13 @@ func NewApp(content GenericContentStore, meta GenericMetaStore) *App {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/{namespace}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
-	route := "/{namespace}/{repo}/objects/{oid}"
+	r.HandleFunc(Config.UrlContext + "/{namespace}/{repo}/objects/batch", app.BatchHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	route := Config.UrlContext + "/{namespace}/{repo}/objects/{oid}"
 	r.HandleFunc(route, app.GetContentHandler).Methods("GET", "HEAD").MatcherFunc(ContentMatcher)
 	r.HandleFunc(route, app.GetMetaHandler).Methods("GET", "HEAD").MatcherFunc(MetaMatcher)
 	r.HandleFunc(route, app.PutHandler).Methods("PUT").MatcherFunc(ContentMatcher)
 
-	r.HandleFunc("/{namespace}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
+	r.HandleFunc(Config.UrlContext + "/{namespace}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
 	app.addMgmt(r)
 	app.router = r
 
