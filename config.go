@@ -2,59 +2,62 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/structs"
 	"gopkg.in/ini.v1"
 	"os"
-	"reflect"
 	"runtime"
 	"strings"
 )
 
 type CassandraConfig struct {
-	Hosts    string
-	Keyspace string
-	Username string
-	Password string
+	Hosts    string `json:"hosts"`
+	Keyspace string `json:"keyspace"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Enabled  bool   `json:"enabled"`
 }
 
 type AwsConfig struct {
-	AccessKeyId     string
-	SecretAccessKey string
-	Region          string
-	BucketName      string
-	BucketAcl       string
+	AccessKeyId     string `json:"accesskeyid"`
+	SecretAccessKey string `json:"secretaccesskey"`
+	Region          string `json:"region"`
+	BucketName      string `json:"bucketname"`
+	BucketAcl       string `json:"bucketacl"`
+	Enabled         bool   `json:"enabled"`
 }
 
 type LdapConfig struct {
-	Enabled         bool
-	Server          string
-	Base            string
-	UserObjectClass string
-	UserCn          string
-	BindDn          string
-	BindPass        string
+	Enabled         bool   `json:"enabled"`
+	Server          string `json:"server"`
+	Base            string `json:"base"`
+	UserObjectClass string `json:"userobjectclass"`
+	UserCn          string `json:"usercn"`
+	BindDn          string `json:"binddn"`
+	BindPass        string `json:"bindpass"`
 }
 
 // Configuration holds application configuration. Values will be pulled from
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
 type Configuration struct {
-	Listen       string
-	Host         string
-	ContentPath  string
-	AdminUser    string
-	AdminPass    string
-	Cert         string
-	Key          string
-	Scheme       string
-	Public       bool
-	MetaDB       string
-	BackingStore string
-	ContentStore string
-	LogFile      string
-	NumProcs     int
-	Aws          *AwsConfig
-	Cassandra    *CassandraConfig
-	Ldap         *LdapConfig
+	Listen       string           `json:"listen"`
+	Host         string           `json:"host"`
+	UrlContext   string           `json:"url_context"`
+	ContentPath  string           `json:"content_path"`
+	AdminUser    string           `json:"admin_user"`
+	AdminPass    string           `json:"admin_pass"`
+	Cert         string           `json:"cert"`
+	Key          string           `json:"key"`
+	Scheme       string           `json:"scheme"`
+	Public       bool             `json:"public"`
+	MetaDB       string           `json:"metadb"`
+	BackingStore string           `json:"backing_store"`
+	ContentStore string           `json:"content_store"`
+	LogFile      string           `json:"logfile"`
+	NumProcs     int              `json:"numprocs"`
+	Aws          *AwsConfig       `json:"aws"`
+	Cassandra    *CassandraConfig `json:"cassandra"`
+	Ldap         *LdapConfig      `json:"ldap"`
 }
 
 func (c *Configuration) IsHTTPS() bool {
@@ -70,7 +73,7 @@ func (c *Configuration) IsPublic() bool {
 var GoEnv = os.Getenv("GO_ENV")
 var Config = &Configuration{}
 
-// iterate thru config.yaml and parse it
+// iterate thru config.ini and parse it
 // always called when initializing Config
 func init() {
 	cfg, err := ini.Load("config.ini")
@@ -81,14 +84,42 @@ func init() {
 		GoEnv = "production"
 	}
 
-	awsConfig := &AwsConfig{AccessKeyId: "", SecretAccessKey: "", Region: "USWest",
-		BucketName: "lfs-server-go-objects", BucketAcl: "bucket-owner-full-control"}
-	ldapConfig := &LdapConfig{Enabled: false, Server: "ldap://localhost:1389", Base: "dc=testers,c=test,o=company",
-		UserObjectClass: "person", UserCn: "uid", BindDn: "", BindPass: ""}
-	cassandraConfig := &CassandraConfig{Hosts: "localhost", Keyspace: "lfs_server_go", Username: "", Password: ""}
+	//Force scheme to be a valid value
+	if cfg.Section("Main").HasKey("Scheme") {
+		val := cfg.Section("Main").Key("Scheme").String()
+		if val != "http" || val != "https" {
+			val = "http"
+		}
+	}
+
+	awsConfig := &AwsConfig{
+		AccessKeyId:     "",
+		SecretAccessKey: "",
+		Region:          "USWest",
+		BucketName:      "lfs-server-go-objects",
+		BucketAcl:       "bucket-owner-full-control",
+		Enabled:         false,
+	}
+	ldapConfig := &LdapConfig{
+		Server:          "ldap://localhost:1389",
+		Base:            "dc=testers,c=test,o=company",
+		UserObjectClass: "person",
+		Enabled:         false,
+		UserCn:          "uid",
+		BindDn:          "",
+		BindPass:        "",
+	}
+	cassandraConfig := &CassandraConfig{
+		Hosts:    "localhost",
+		Keyspace: "lfs_server_go",
+		Username: "",
+		Password: "",
+		Enabled:  false,
+	}
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",
 		Host:         "localhost:8080",
+		UrlContext:   "",
 		ContentPath:  "lfs-content",
 		AdminUser:    "admin",
 		AdminPass:    "admin",
@@ -99,7 +130,7 @@ func init() {
 		MetaDB:       "lfs-test.db",
 		BackingStore: "bolt",
 		ContentStore: "filesystem",
-		NumProcs:     runtime.NumCPU(),
+		NumProcs:     runtime.NumCPU() * 2,
 		Ldap:         ldapConfig,
 		Aws:          awsConfig,
 		Cassandra:    cassandraConfig,
@@ -109,15 +140,9 @@ func init() {
 	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
 	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
 	Config = configuration
-
 }
 
-func (c *Configuration) DumpConfig() map[string]string {
-	configDump := make(map[string]string)
-	for name, _ := range attributes(&Configuration{}) {
-		valueE := reflect.ValueOf(Config).Elem()
-		field := valueE.FieldByName(name)
-		configDump[name] = field.String()
-	}
-	return configDump
+func (c *Configuration) DumpConfig() map[string]interface{} {
+	m := structs.Map(Config)
+	return m
 }
