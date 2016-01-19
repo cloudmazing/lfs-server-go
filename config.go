@@ -123,7 +123,6 @@ func init() {
 		ContentPath:  "lfs-content",
 		AdminUser:    "admin",
 		AdminPass:    "admin",
-        UrlContext:   "",
 		Cert:         "",
 		Key:          "",
 		Scheme:       "http",
