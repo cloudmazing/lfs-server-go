@@ -13,7 +13,6 @@ Key = somekey.key
 Scheme = https
 ; Should the contents be public?
 Public = false
-
 ; Database Configuration
 ; path to database file to use.
 ; Not used when both AWS storage and LDAP are enabled
