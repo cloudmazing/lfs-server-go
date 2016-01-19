@@ -7,35 +7,31 @@ Host = 127.0.0.1:9999
 AdminUser = admin_username
 AdminPass = admin_password
 ; path to ssl certificate
-Cert = somekey.crt
+;Cert = somekey.crt
 ; path to ssl key
-Key = somekey.key
-Scheme = https
+;Key = somekey.key
+Scheme = http
 ; Should the contents be public?
-Public = false
-
-; URL Context: for serving under a non-root location
-; When adding, omit any trailing /
-; i.e. /lfs (correct) vs. /lfs/ (incorrect)
-UrlContext = ""
+Public = true
 ; Database Configuration
 ; path to database file to use.
 ; Not used when both AWS storage and LDAP are enabled
-; MetaDB = lfs.db
+MetaDB = lfs.db
 ; Content Store Configuration
 ; Where to store the content on disk. Not used when AWS storage is enabled
 ContentPath = lfs_content
 ;ContentStore options are [aws,filesystem]
-ContentStore = aws
+ContentStore = filesystem
 ; BackingStore options are [cassandra, bolt]
 ; bolt requires no external services
-BackingStore = cassandra
+BackingStore = bolt
 ; NumProcs defaults to the number of processors available to the system
 ; based on what runtime.NumCPU() returns
 ; NumProcs = <some number>
 
 ; Cassandra section is optional - but suggested for large deployments
 [Cassandra]
+Enabled = false
 ; Optional - for storing meta content in Cassandra
 ; comma separated
 Hosts = localhost
@@ -47,16 +43,17 @@ Hosts = localhost
 
 ; LDAP section is optional - but suggested for large deployments
 [Ldap]
+Enabled = false
 ; LDAP configuration - Optional
 ;Server = ldap://localhost:1389
 ; true/false
-; Enabled = true
 ;Base = ou=people,o=mycompany
 ;UserObjectClass = person
 ;UserCn = uid
 
 ; AWS is optional, but useful
 [Aws]
+Enabled = false
 AccessKeyId = your-access-key-id
 SecretAccessKey = your-secret-access-key
 ; AWS Configuration - Optional, unless you're using aws for the content store

@@ -20,7 +20,7 @@ var (
 type pageData struct {
 	Name       string
 	Config     *Configuration
-	ConfigDump map[string]string
+	ConfigDump map[string]interface{}
 	Users      []*MetaUser
 	Objects    []*MetaObject
 	Projects   []*MetaProject
