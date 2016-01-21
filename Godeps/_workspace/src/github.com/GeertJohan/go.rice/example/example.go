@@ -8,8 +8,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/GeertJohan/go.rice"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/GeertJohan/go.rice"
 )
 
 func main() {

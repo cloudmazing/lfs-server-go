@@ -2,7 +2,7 @@ package ldap
 
 import (
 	"crypto/tls"
-	"github.com/nmcclain/asn1-ber"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/nmcclain/asn1-ber"
 	"io"
 	"log"
 	"net"

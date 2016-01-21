@@ -3,6 +3,9 @@
 set -eu
 set -o pipefail
 
+if [[ ! -f "config.ini" ]];then
+  cp ./config.ini.example config.ini
+fi
 cd $(dirname $0)/../
 GO_ENV=${GO_ENV:-dev}
 export GO_ENV

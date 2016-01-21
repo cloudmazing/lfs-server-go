@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/golang/snappy"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/golang/snappy"
 )
 
 func TestSnappyCompressor(t *testing.T) {
