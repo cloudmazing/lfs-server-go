@@ -1,19 +1,23 @@
 var Mgmt = Mgmt || {};
 
 var showHide = function () {
+    'use strict';
     $(".hidden").hide();
 };
 
-var toggleShow = function(elem){
-  if ($(elem).hasClass('hidden')) {
-      $(elem).removeClass('hidden');
-      $(elem).show();
-  } else {
-      $(elem).addClass('hidden');
-      $(elem).hide();
-  }
+var toggleShow = function (elem) {
+    'use strict';
+    if ($(elem).hasClass('hidden')) {
+        $(elem).removeClass('hidden');
+        $(elem).show();
+    } else {
+        $(elem).addClass('hidden');
+        $(elem).hide();
+    }
 };
+
 Mgmt.initialize = function () {
+    'use strict';
     console.log("Initialized");
     showHide();
     $(".show-oids").on("click", function (elem) {
@@ -26,5 +30,6 @@ Mgmt.initialize = function () {
 };
 
 window.onload = function () {
+    'use strict';
     Mgmt.initialize();
 };
