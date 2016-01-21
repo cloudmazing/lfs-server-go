@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-import "gopkg.in/inf.v0"
+import "github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/gopkg.in/inf.v0"
 
 func ExampleDec_SetString() {
 	d := new(inf.Dec)

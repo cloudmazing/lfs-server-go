@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/fatih/structs"
-	"gopkg.in/ini.v1"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/fatih/structs"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/gopkg.in/ini.v1"
 	"os"
 	"runtime"
 	"strings"

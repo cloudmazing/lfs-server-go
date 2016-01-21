@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/boltdb/bolt"
-	"github.com/boltdb/bolt/cmd/bolt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/boltdb/bolt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/boltdb/bolt/cmd/bolt"
 )
 
 // Ensure the "info" command can print information about a database.

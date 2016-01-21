@@ -14,8 +14,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/GeertJohan/go.rice/embedded"
 	"github.com/akavel/rsrc/coff"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/GeertJohan/go.rice/embedded"
 )
 
 type sizedReader struct {

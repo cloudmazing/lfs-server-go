@@ -1,7 +1,7 @@
 package gocql
 
 import (
-	"github.com/golang/snappy"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/golang/snappy"
 )
 
 type Compressor interface {

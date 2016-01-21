@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/inf.v0"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/gopkg.in/inf.v0"
 )
 
 type RowData struct {

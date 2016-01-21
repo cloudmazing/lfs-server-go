@@ -3,7 +3,7 @@ package cqlr
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/gocql/gocql"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gocql/gocql"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"speter.net/go/exp/math/dec/inf"
