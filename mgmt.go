@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/GeertJohan/go.rice"
-	"github.com/gorilla/mux"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/GeertJohan/go.rice"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gorilla/mux"
 	"html/template"
 	"io"
 	"net/http"

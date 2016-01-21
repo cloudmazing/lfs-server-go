@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/fatih/structs"
-	"gopkg.in/ini.v1"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/fatih/structs"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/gopkg.in/ini.v1"
 	"os"
 	"runtime"
 	"strings"
@@ -87,7 +87,11 @@ func init() {
 	//Force scheme to be a valid value
 	if cfg.Section("Main").Key("Scheme").String() != "" {
 		val := cfg.Section("Main").Key("Scheme").String()
-		if val != "http" || val != "https" {
+		switch val {
+		case
+			"http", "https":
+			val = val
+		default:
 			val = "http"
 		}
 	}

@@ -1,12 +1,13 @@
 package assert
+
 // Testing helpers for doozer.
 
 import (
-	"github.com/kr/pretty"
-	"reflect"
-	"testing"
-	"runtime"
 	"fmt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/kr/pretty"
+	"reflect"
+	"runtime"
+	"testing"
 )
 
 func assert(t *testing.T, result bool, f func(), cd int) {

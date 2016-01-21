@@ -4,9 +4,9 @@ package gocql
 
 import (
 	"fmt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/gopkg.in/inf.v0"
 	"reflect"
 	"sort"
-	"gopkg.in/inf.v0"
 	"testing"
 	"time"
 )

@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
-	"github.com/mitchellh/goamz/s3"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/mitchellh/goamz/s3"
 	"io"
 	"io/ioutil"
 	"log"

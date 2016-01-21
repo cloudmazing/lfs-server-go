@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/nmcclain/ldap"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/nmcclain/ldap"
 	"log"
 	"net"
 	"sync"
