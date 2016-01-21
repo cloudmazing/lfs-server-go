@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/nmcclain/ldap"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/nmcclain/ldap"
 	"os"
 	"os/exec"
 	"strings"
