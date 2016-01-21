@@ -70,7 +70,8 @@ func (us *UserService) GetResponse() error {
 		us.UserAccessResponse.Filled = true
 		return nil
 	} else {
-		return errors.New(fmt.Sprintf("STATUS ERR: %s", err.Error()))
+		errors.New(fmt.Sprintf("STATUS ERR: %s", err.Error()))
+		return err
 	}
 
 }

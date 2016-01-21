@@ -9,7 +9,7 @@ cd $base
 if [[ ! "`ps -ef | grep '[t]est_ldap_server'`" ]] ; then
   echo "Starting LDAP server"
   cd test_ldap_server
-  go build
+  godep go build
   ./test_ldap_server >> ../log/ldap_test.log 2>&1 &
   ldap_pid=$!
   cd -
@@ -24,8 +24,8 @@ for p in $prereqs; do
 done
 go fmt
 mkdir -p $base/coverage
-go test -coverprofile=$base/coverage/cover.out -covermode=count $*
-go tool cover -html=$base/coverage/cover.out
+godep go test -coverprofile=$base/coverage/cover.out -covermode=count $*
+godep go tool cover -html=$base/coverage/cover.out
 resp=$?
 
 if [[ "x${ldap_pid}" != "x" ]]; then
