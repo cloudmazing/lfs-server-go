@@ -87,7 +87,11 @@ func init() {
 	//Force scheme to be a valid value
 	if cfg.Section("Main").Key("Scheme").String() != "" {
 		val := cfg.Section("Main").Key("Scheme").String()
-		if val != "http" || val != "https" {
+		switch val {
+		case
+			"http", "https":
+			val = val
+		default:
 			val = "http"
 		}
 	}
