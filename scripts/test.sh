@@ -15,7 +15,7 @@ if [[ ! "`ps -ef | grep '[t]est_ldap_server'`" ]] ; then
   cd -
 fi
 
-prereqs="cassandra redis"
+prereqs="cassandra"
 for p in $prereqs; do
   lf="`echo [$(echo $p | cut -b1)]${p:1}`"
   if [[ "x`ps -ef |grep $lf`" == "x" ]];then
