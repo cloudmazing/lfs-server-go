@@ -2,7 +2,7 @@ package aws_test
 
 import (
 	"fmt"
-	"github.com/mitchellh/goamz/aws"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/mitchellh/goamz/aws"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"

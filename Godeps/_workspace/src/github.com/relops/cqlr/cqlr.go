@@ -2,7 +2,7 @@ package cqlr
 
 import (
 	"errors"
-	"github.com/gocql/gocql"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gocql/gocql"
 	"reflect"
 	"strings"
 )

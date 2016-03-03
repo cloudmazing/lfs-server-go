@@ -34,7 +34,7 @@ BackingStore = bolt
 Enabled = false
 ; Optional - for storing meta content in Cassandra
 ; comma separated
-Hosts = localhost
+Hosts = localhost:9042, anotherhost:9042
 ; Optional - used to select cassandra keyspace
 ; Defaults to lfs_server_go_GO_ENV, if GO_ENV is not set,
 ; Keyspace = lfs_server_go

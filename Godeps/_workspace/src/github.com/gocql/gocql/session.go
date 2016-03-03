@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/golang/groupcache/lru"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/golang/groupcache/lru"
 )
 
 // Session is the interface used by users to interact with the database.

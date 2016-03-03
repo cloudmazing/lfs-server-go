@@ -2,7 +2,7 @@
 
 set -eu
 set -o pipefail
-
+go install ./...
 if [[ ! -f "config.ini" ]];then
   cp ./config.ini.example config.ini
 fi

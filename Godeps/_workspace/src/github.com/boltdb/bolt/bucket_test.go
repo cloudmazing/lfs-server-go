@@ -12,7 +12,7 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/boltdb/bolt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/boltdb/bolt"
 )
 
 // Ensure that a bucket that gets a non-existent key returns nil.

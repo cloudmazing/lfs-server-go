@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/golang.org/x/crypto/bcrypt"
 	"net/http"
 	"reflect"
 	"runtime"

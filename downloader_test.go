@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bmizerany/assert"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/bmizerany/assert"
 	"testing"
 )
 

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nmcclain/asn1-ber"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/nmcclain/asn1-ber"
 )
 
 type compileTest struct {

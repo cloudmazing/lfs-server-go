@@ -22,7 +22,7 @@ for p in $prereqs; do
    echo "$p does not look to be running, tests will fail"
   fi
 done
-go fmt
+go fmt ./...
 mkdir -p $base/coverage
 godep go test -coverprofile=$base/coverage/cover.out -covermode=count $*
 godep go tool cover -html=$base/coverage/cover.out

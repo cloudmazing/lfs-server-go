@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/GeertJohan/go.rice/embedded"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/GeertJohan/go.rice/embedded"
 )
 
 // re-type to make exported methods invisible to user (godoc)

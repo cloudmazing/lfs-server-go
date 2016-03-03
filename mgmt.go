@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/GeertJohan/go.rice"
-	"github.com/gorilla/mux"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/GeertJohan/go.rice"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gorilla/mux"
 	"html/template"
 	"io"
 	"net/http"
@@ -115,13 +115,11 @@ func (a *App) searchOidHandler(w http.ResponseWriter, r *http.Request) {
 	if len(searchedOid) < 1 {
 		writeStatus(w, r, 404)
 	}
-	sess := NewCassandraSession()
-	defer sess.Client.Close()
-	cs, err := NewCassandraMetaStore(sess)
+	cs, err := FindMetaStore()
 	if err != nil {
 		writeStatus(w, r, 404)
 	}
-	oids, err := cs.findAllOids()
+	oids, err := cs.Objects()
 	if err != nil {
 		writeStatus(w, r, 404)
 	}

@@ -3,8 +3,8 @@ package test
 import (
 	"bytes"
 	"fmt"
-	"github.com/gocql/gocql"
-	"github.com/relops/cqlr"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gocql/gocql"
+	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/relops/cqlr"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
