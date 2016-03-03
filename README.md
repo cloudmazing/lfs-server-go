@@ -22,11 +22,11 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
 1. Remove/Clean up old objects on delete
 1. When an object is public and AWS is enabled, offload GETs directly to AWS
 1. Adopt [verification of uploads](https://github.com/github/git-lfs/tree/master/docs/api#verification)
-1. Redo the UI so it looks better  
+1. Redo the UI so it is abstracted into its own app  
 
 ## Installing
 
-Alternatively, use the Go installer:
+Use the Go installer, this will install all dependencies tracked:
 
 ```
   $ go install github.com/cloudmazing/lfs-server-go
@@ -38,8 +38,22 @@ To build from source, use the Go tools:
 
 ```
   $ go get github.com/cloudmazing/lfs-server-go
+  $ go install ./...
 ```
 
+## Making changes
+
+To build from source, use the Go tools:
+
+```
+  $ go get github.com/cloudmazing/lfs-server-go
+  $ go install ./...
+  <edit files>
+  # will rewrite file imports
+  $ godep save -r ./...
+```
+
+Commit everything (including whats under Godeps/\_workspace
 
 ## Running
 
