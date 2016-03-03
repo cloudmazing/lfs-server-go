@@ -27,19 +27,19 @@ type pageData struct {
 }
 
 func (a *App) addMgmt(r *mux.Router) {
-	r.HandleFunc("/mgmt", basicAuth(a.indexHandler)).Methods("GET")
-	r.HandleFunc("/mgmt/objects", basicAuth(a.objectsHandler)).Methods("GET")
-	r.HandleFunc("/mgmt/projects", basicAuth(a.projectsHandler)).Methods("GET")
-	r.HandleFunc("/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
-	r.HandleFunc("/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
-	r.HandleFunc("/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
-	r.HandleFunc("/mgmt/searchOid", basicAuth(a.searchOidHandler)).Methods("GET")
+	r.HandleFunc(Config.UrlContext + "/mgmt", basicAuth(a.indexHandler)).Methods("GET")
+	r.HandleFunc(Config.UrlContext + "/mgmt/objects", basicAuth(a.objectsHandler)).Methods("GET")
+	r.HandleFunc(Config.UrlContext + "/mgmt/projects", basicAuth(a.projectsHandler)).Methods("GET")
+	r.HandleFunc(Config.UrlContext + "/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
+	r.HandleFunc(Config.UrlContext + "/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
+	r.HandleFunc(Config.UrlContext + "/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
+	r.HandleFunc(Config.UrlContext + "/mgmt/searchOid", basicAuth(a.searchOidHandler)).Methods("GET")
 
 	cssBox = rice.MustFindBox("mgmt/css")
 	jsBox = rice.MustFindBox("mgmt/js")
 	templateBox = rice.MustFindBox("mgmt/templates")
-	r.HandleFunc("/mgmt/css/{file}", basicAuth(cssHandler))
-	r.HandleFunc("/mgmt/js/{file}", basicAuth(jsHandler))
+	r.HandleFunc(Config.UrlContext + "/mgmt/css/{file}", basicAuth(cssHandler))
+	r.HandleFunc(Config.UrlContext + "/mgmt/js/{file}", basicAuth(jsHandler))
 }
 
 func cssHandler(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +210,7 @@ func (a *App) addUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/mgmt/users", 302)
+	http.Redirect(w, r, Config.UrlContext + "/mgmt/users", 302)
 }
 
 func (a *App) delUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +225,7 @@ func (a *App) delUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/mgmt/users", 302)
+	http.Redirect(w, r, Config.UrlContext + "/mgmt/users", 302)
 }
 
 func render(w http.ResponseWriter, tmpl string, data pageData) error {
