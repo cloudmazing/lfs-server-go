@@ -1,0 +1,23 @@
+; Example to use ONLY local data
+[Main]
+; Port to listen on
+Listen = tcp://:9999
+; Host address - used for downloading
+Host = 127.0.0.1:9999
+; login for the admin user
+AdminUser = admin
+AdminPass = admin
+; Should the contents be public?
+Public = false
+Secret = 'asdf1234'
+; Database Configuration
+; path to database file to use.
+; Not used when both AWS storage and LDAP are enabled
+MetaDB = lfs.db
+; Content Store Configuration
+; Where to store the content on disk. Not used when AWS storage is enabled
+ContentPath = /tmp/lfs_content
+;ContentStore options are [aws,filesystem]
+ContentStore = filesystem
+; Backing stores are one of cassandra or bolt
+BackingStore = bolt
