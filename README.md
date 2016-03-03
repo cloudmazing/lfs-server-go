@@ -53,7 +53,7 @@ To build from source, use the Go tools:
   $ godep save -r ./...
 ```
 
-Commit everything (including whats under Godeps/\_workspace
+Commit everything (including whats under Godeps/\_workspace, see https://github.com/tools/godep/issues/131
 
 ## Running
 
