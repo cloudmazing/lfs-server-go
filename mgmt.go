@@ -115,13 +115,11 @@ func (a *App) searchOidHandler(w http.ResponseWriter, r *http.Request) {
 	if len(searchedOid) < 1 {
 		writeStatus(w, r, 404)
 	}
-	sess := NewCassandraSession()
-	defer sess.Client.Close()
-	cs, err := NewCassandraMetaStore(sess)
+	cs, err := FindMetaStore()
 	if err != nil {
 		writeStatus(w, r, 404)
 	}
-	oids, err := cs.findAllOids()
+	oids, err := cs.Objects()
 	if err != nil {
 		writeStatus(w, r, 404)
 	}
