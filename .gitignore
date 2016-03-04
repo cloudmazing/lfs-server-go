@@ -15,3 +15,4 @@ testing_ldap
 aws_testing
 lfs-content-test/
 coverage/
+Godeps/_workspace
