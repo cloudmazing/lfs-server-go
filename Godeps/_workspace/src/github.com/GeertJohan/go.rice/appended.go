@@ -12,8 +12,8 @@ import (
 	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/kardianos/osext"
 )
 
-// appendedBox defines an appended box
-type appendedBox struct {
+type appendedBox struct // appendedBox defines an appended box
+{
 	Name  string                   // box name
 	Files map[string]*appendedFile // appended files (*zip.File) by full path
 }
