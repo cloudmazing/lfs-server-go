@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/mitchellh/goamz/aws"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/mitchellh/goamz/s3"
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
 	"io/ioutil"
 	"os"
 	"strings"

@@ -1,6 +1,9 @@
 {
 	"ImportPath": "github.com/memikequinn/lfs-server-go",
 	"GoVersion": "go1.6",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/GeertJohan/go.rice",
