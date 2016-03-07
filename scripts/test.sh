@@ -6,15 +6,18 @@ export GO_ENV=test
 ldap_pid=""
 base=$(dirname $0)/../
 cd $base
+godep > /dev/null 2>&1 || go get github.com/tools/godep
 if [[ ! "`ps -ef | grep '[t]est_ldap_server'`" ]] ; then
   echo "Starting LDAP server"
   cd test_ldap_server
-  godep go build
+  godep go build ./...
   ./test_ldap_server >> ../log/ldap_test.log 2>&1 &
   ldap_pid=$!
   cd -
 fi
-
+# install godep dependencies
+godep restore
+# space delimiter
 prereqs="cassandra"
 for p in $prereqs; do
   lf="`echo [$(echo $p | cut -b1)]${p:1}`"

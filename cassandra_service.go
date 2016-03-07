@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gocql/gocql"
+	"github.com/gocql/gocql"
 )
 
 type CassandraService struct {

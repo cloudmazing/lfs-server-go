@@ -34,11 +34,12 @@ Use the Go installer, this will install all dependencies tracked:
 
 ## Building
 
-To build from source, use the Go tools:
+To build from source, use the Go tools + godep:
 
 ```
   $ go get github.com/cloudmazing/lfs-server-go
   $ go install ./...
+  $ godep restore
 ```
 
 ## Making changes
@@ -49,11 +50,9 @@ To build from source, use the Go tools:
   $ go get github.com/cloudmazing/lfs-server-go
   $ go install ./...
   <edit files>
-  # will rewrite file imports
-  $ godep save -r ./...
+  $ godep save ./...
+  $ godep update ./...
 ```
-
-Commit everything (including whats under Godeps/\_workspace, see https://github.com/tools/godep/issues/131
 
 ## Running
 
@@ -70,22 +69,18 @@ Generate a key pair
 openssl req -x509 -sha256 -nodes -days 2100 -newkey rsa:2048 -keyout mine.key -out mine.crt
 ```
 
-Make yourself a run script
-
 Update the config to point at your new keys
 
 Build the server
 
 ```
 go build
-
 ```
 
 ### Start it
 
 ```
 ./scripts/start.sh
-
 ```
 
 ## Client 
@@ -96,7 +91,6 @@ To use the LFS test server with the Git LFS client, configure it in the reposito
 ```
   [lfs]
     url = "http://localhost:8080/janedoe/lfsrepo"
-
 ```
 
 This file _MUST_ be checked into git inside of your project.
@@ -111,7 +105,6 @@ NOTE: If using https with a self signed cert also disable cert checking in the c
 
 	[http]
 		sslfverify = false
-
 ```
 
 ## Security Design

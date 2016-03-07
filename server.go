@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gorilla/context"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/gorilla/mux"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 )
 

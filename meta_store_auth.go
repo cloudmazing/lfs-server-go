@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/nmcclain/ldap"
+	"github.com/nmcclain/ldap"
 	"net/url"
 	"strconv"
 	"strings"

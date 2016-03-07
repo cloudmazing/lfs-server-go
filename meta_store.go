@@ -8,7 +8,7 @@ import (
 
 	"encoding/base64"
 	"fmt"
-	"github.com/memikequinn/lfs-server-go/Godeps/_workspace/src/github.com/boltdb/bolt"
+	"github.com/boltdb/bolt"
 	"strings"
 )
 
