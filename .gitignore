@@ -16,3 +16,4 @@ aws_testing
 lfs-content-test/
 coverage/
 Godeps/_workspace/**
+nohup.out
