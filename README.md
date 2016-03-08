@@ -34,7 +34,9 @@ Use the Go installer, this will install all dependencies tracked:
 
 To use a specific config file, set `LFS_SERVER_GO_CONFIG=/path/to/config`
 
-Then start with `./scripts/start.sh`
+Then start with `./scripts/start`
+
+Stop with `./scripts/stop`
 
 ## Building
 
@@ -84,7 +86,7 @@ go build
 ### Start it
 
 ```
-./scripts/start.sh
+./scripts/start
 ```
 
 ## Client 
