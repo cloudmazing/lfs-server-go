@@ -32,6 +32,10 @@ Use the Go installer, this will install all dependencies tracked:
   $ go install github.com/cloudmazing/lfs-server-go
 ```
 
+To use a specific config file, set `LFS_SERVER_GO_CONFIG=/path/to/config`
+
+Then start with `./scripts/start.sh`
+
 ## Building
 
 To build from source, use the Go tools + godep:

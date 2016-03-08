@@ -76,7 +76,13 @@ var Config = &Configuration{}
 // iterate thru config.ini and parse it
 // always called when initializing Config
 func init() {
-	cfg, err := ini.Load("config.ini")
+	configFile := os.Getenv("LFS_SERVER_GO_CONFIG")
+	if configFile == "" {
+		fmt.Println("LFS_SERVER_GO_CONFIG is not set, Using config file %v", configFile)
+		configFile = "config.ini"
+	}
+
+	cfg, err := ini.Load(configFile)
 	if err != nil {
 		panic(fmt.Sprintf("unable to read config.ini, %v", err))
 	}

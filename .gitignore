@@ -17,3 +17,4 @@ lfs-content-test/
 coverage/
 Godeps/_workspace/**
 nohup.out
+lfs-server-go.log
