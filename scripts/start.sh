@@ -10,7 +10,7 @@ cd $(dirname $0)/../
 GO_ENV=${GO_ENV:-dev}
 
 export GO_ENV
-godep > /dev/null 2>&1 || go get github.com/tools/godep
+which godep > /dev/null || go get github.com/tools/godep
 godep restore
 
 if [[ ("${GO_ENV}" == "test") && (! "`ps -ef | grep '[t]est_ldap'`") ]] ; then
@@ -19,7 +19,7 @@ fi
 
 test ! -f ./lfs-server-go && godep go build
 
-goreman > /dev/null 2>&1 || go get github.com/mattn/goreman
+which goreman > /dev/null || go install github.com/mattn/goreman
 goreman check
 
 echo "Using goreman to start lfs-server-go"
