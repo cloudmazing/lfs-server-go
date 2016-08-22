@@ -66,7 +66,7 @@ func (m *MySQLMetaStore) findAllOids() ([]*MetaObject, error) {
 OID Maps
 */
 func (m *MySQLMetaStore) mapOid(id int64) ([]string, error) {
-	rows, err := m.client.Query("select oid from oid_maps where project_id = ?", id)
+	rows, err := m.client.Query("select oid from oid_maps where projectID = ?", id)
 
 	var (
 		oid string
@@ -75,12 +75,14 @@ func (m *MySQLMetaStore) mapOid(id int64) ([]string, error) {
 
 	if err != nil {
 		logger.Log(kv{"fn": "findProject", "msg": fmt.Sprintf("Oid not found %s", err)})
+		return nil, err
 	}
 
 	for rows.Next() {
 		err := rows.Scan(&oid)
 		if err != nil {
 			logger.Log(kv{"fn": "findProject", "msg": err})
+			return nil, err
 		}
 		oidList = append(oidList, oid)
 	}
@@ -171,7 +173,7 @@ func (m *MySQLMetaStore) findProject(projectName string) (*MetaProject, error) {
 	}
 
 	// get oids
-	rows, err := m.client.Query("select oid from oid_maps where project_id = ?", id)
+	rows, err := m.client.Query("select oid from oid_maps where projectID = ?", id)
 
 	if err != nil {
 		logger.Log(kv{"fn": "findProject", "msg": fmt.Sprintf("Oid not found %s", err)})
@@ -207,7 +209,7 @@ func (m *MySQLMetaStore) addOidToProject(oid string, project string) error {
 		name string
 	)
 	err := m.client.QueryRow("select * from projects where name = ?", project).Scan(&id, &name)
-	_, err = m.client.Exec("insert into oid_maps (oid, project_id) values (?, ?)", oid, id)
+	_, err = m.client.Exec("insert into oid_maps (oid, projectID) values (?, ?)", oid, id)
 	logger.Log(kv{"fn": "addOidToProject", "msg": err})
 	return err
 }
