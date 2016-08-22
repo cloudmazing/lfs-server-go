@@ -30,6 +30,7 @@ func (a *App) addMgmt(r *mux.Router) {
 	r.HandleFunc("/mgmt", basicAuth(a.indexHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/objects", basicAuth(a.objectsHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/projects", basicAuth(a.projectsHandler)).Methods("GET")
+	r.HandleFunc("/mgmt/addProject", basicAuth(a.addProject)).Methods("POST")
 	r.HandleFunc("/mgmt/users", basicAuth(a.usersHandler)).Methods("GET")
 	r.HandleFunc("/mgmt/add", basicAuth(a.addUserHandler)).Methods("POST")
 	r.HandleFunc("/mgmt/del", basicAuth(a.delUserHandler)).Methods("POST")
@@ -195,6 +196,21 @@ func (a *App) usersHandler(w http.ResponseWriter, r *http.Request) {
 			writeStatus(w, r, 404)
 		}
 	}
+}
+
+func (a *App) addProject(w http.ResponseWriter, r *http.Request) {
+	projectName := r.FormValue("name")
+	if projectName == "" {
+		fmt.Fprintf(w, "Invalid project name: %s", projectName)
+		return
+	}
+
+	if err := a.metaStore.AddProject(projectName); err != nil {
+		fmt.Fprintf(w, "Error adding project: %s", err)
+		return
+	}
+
+	http.Redirect(w, r, "/mgmt/projects", 302)
 }
 
 func (a *App) addUserHandler(w http.ResponseWriter, r *http.Request) {
