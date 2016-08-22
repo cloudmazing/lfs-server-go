@@ -294,6 +294,14 @@ func (self *CassandraMetaStore) Projects() ([]*MetaProject, error) {
 }
 
 /*
+AddProject (create a new project using POST)
+Only implemented on MySQL meta store
+*/
+func (self *CassandraMetaStore) AddProject(name string) error {
+	return errNotImplemented
+}
+
+/*
 Auth routine.  Requires an auth string like
 "Basic YWRtaW46YWRtaW4="
 */

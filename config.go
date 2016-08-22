@@ -36,6 +36,21 @@ type LdapConfig struct {
 	BindPass        string `json:"bindpass"`
 }
 
+/*
+MySQLConfig (MySQL configuration struct)
+  => Host     :- MySQL host e.g 127.0.0.1:3306
+  => Database :- Name of the database default to lfs_server_go
+  => Username :- DB username
+  => Password :- DB password
+*/
+type MySQLConfig struct {
+	Host     string `json:"host"`
+	Database string `json:"database"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Enabled  bool   `json:"enabled"`
+}
+
 // Configuration holds application configuration. Values will be pulled from
 // environment variables, prefixed by keyPrefix. Default values can be added
 // via tags.
@@ -58,6 +73,7 @@ type Configuration struct {
 	Aws          *AwsConfig       `json:"aws"`
 	Cassandra    *CassandraConfig `json:"cassandra"`
 	Ldap         *LdapConfig      `json:"ldap"`
+	MySQL        *MySQLConfig     `json:"mysql"`
 }
 
 func (c *Configuration) IsHTTPS() bool {
@@ -126,6 +142,13 @@ func init() {
 		Password: "",
 		Enabled:  false,
 	}
+	mysqlConfig := &MySQLConfig{
+		Host:     "",
+		Database: "lfs_server_go",
+		Username: "",
+		Password: "",
+		Enabled:  false,
+	}
 	configuration := &Configuration{
 		Listen:       "tcp://:8080",
 		Host:         "localhost:8080",
@@ -144,11 +167,13 @@ func init() {
 		Ldap:         ldapConfig,
 		Aws:          awsConfig,
 		Cassandra:    cassandraConfig,
+		MySQL:        mysqlConfig,
 	}
 	err = cfg.Section("Main").MapTo(configuration)
 	err = cfg.Section("Aws").MapTo(configuration.Aws)
 	err = cfg.Section("Ldap").MapTo(configuration.Ldap)
 	err = cfg.Section("Cassandra").MapTo(configuration.Cassandra)
+	err = cfg.Section("MySQL").MapTo(configuration.MySQL)
 	Config = configuration
 }
 
