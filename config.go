@@ -82,7 +82,7 @@ var Config = &Configuration{}
 func init() {
 	configFile := os.Getenv("LFS_SERVER_GO_CONFIG")
 	if configFile == "" {
-		fmt.Println("LFS_SERVER_GO_CONFIG is not set, Using config file %v", configFile)
+		fmt.Println("LFS_SERVER_GO_CONFIG is not set, Using default config.ini")
 		configFile = "config.ini"
 	}
 

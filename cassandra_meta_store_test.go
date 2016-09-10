@@ -265,7 +265,7 @@ func TestProjectOidRelationship(t *testing.T) {
 }
 
 func setupCassandraMeta() error {
-	store, err := NewCassandraMetaStore()
+	store, err := NewCassandraMetaStore(NewCassandraSession())
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
 		return errors.New(fmt.Sprintf("error initializing test meta store: %s\n", err))

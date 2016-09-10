@@ -23,13 +23,18 @@ func testResponseHeader(t *testing.T, r *http.Response, header string, want stri
 }
 
 func TestMgmtGetObjects_Json(t *testing.T) {
+	err := testMetaStore.AddUser(testUser, testPass)
+	if err != nil {
+		fmt.Println("got an err adding user", err.Error())
+	}
+
 	req, err := http.NewRequest("GET", lfsServer.URL+"/mgmt/objects", nil)
 	if err != nil {
 		t.Fatalf("request error: %s", err)
 	}
 	header := map[string][]string{"Accept": {"application/json"}, "Accept-Encoding": {"gzip", "text"}}
 	req.Header = header
-	req.SetBasicAuth(testUser, testPass)
+	req.SetBasicAuth(Config.AdminUser, Config.AdminPass)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("response error: %s", err)
@@ -68,7 +73,7 @@ func TestMgmtGetProjects_Json(t *testing.T) {
 	}
 	header := map[string][]string{"Accept": {"application/json"}, "Accept-Encoding": {"gzip", "text"}}
 	req.Header = header
-	req.SetBasicAuth(testUser, testPass)
+	req.SetBasicAuth(Config.AdminUser, Config.AdminPass)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("response error: %s", err)
@@ -102,7 +107,7 @@ func TestMgmtGetUsers_Json(t *testing.T) {
 	}
 	header := map[string][]string{"Accept": {"application/json"}, "Accept-Encoding": {"gzip", "text"}}
 	req.Header = header
-	req.SetBasicAuth(testUser, testPass)
+	req.SetBasicAuth(Config.AdminUser, Config.AdminPass)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("response error: %s", err)

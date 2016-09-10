@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/mitchellh/goamz/aws"
-	"github.com/mitchellh/goamz/s3"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
 )
 
 var awsContentStore *AwsContentStore
@@ -199,7 +200,7 @@ func teardownAwsTest() {
 	if err != nil {
 		return
 	}
-	delItems := make([]string, 0)
+	var delItems []string
 	if len(items.Contents) > 0 {
 		for _, item := range items.Contents {
 			if len(item.Key) < 1 {
