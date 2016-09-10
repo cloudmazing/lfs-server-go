@@ -64,6 +64,10 @@ func (c *Configuration) IsHTTPS() bool {
 	return strings.Contains(Config.Scheme, "https")
 }
 
+func (c *Configuration) UseTLS() bool {
+	return Config.Cert != "" && Config.Key != ""
+}
+
 func (c *Configuration) IsPublic() bool {
 	return Config.Public
 }

@@ -102,10 +102,14 @@ func main() {
 	listener = tl
 
 	if Config.IsHTTPS() {
-		logger.Log(kv{"fn": "main", "msg": "Using https"})
-		listener, err = wrapHttps(tl, Config.Cert, Config.Key)
-		if err != nil {
-			logger.Fatal(kv{"fn": "main", "err": "Could not create https listener: " + err.Error()})
+		if Config.UseTLS() {
+			logger.Log(kv{"fn": "main", "msg": "Using tls"})
+			listener, err = wrapHttps(tl, Config.Cert, Config.Key)
+			if err != nil {
+				logger.Fatal(kv{"fn": "main", "err": "Could not create https listener: " + err.Error()})
+			}
+		} else {
+			logger.Log(kv{"fn": "main", "msg": "Will generate https hrefs"})
 		}
 	}
 
