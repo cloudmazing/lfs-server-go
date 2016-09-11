@@ -5,9 +5,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/gob"
-	// "encoding/json"
 	"fmt"
-	// "gopkg.in/gorp.v1"
 	"strings"
 )
 
@@ -28,7 +26,12 @@ func NewMySQLMetaStore(mysqlService ...*MySQLService) (*MySQLMetaStore, error) {
 	}
 
 	mysql := mysqlService[0]
-	return &MySQLMetaStore{mysqlService: mysql, client: mysql.Client}, nil
+
+	if mysql.Fail {
+		return nil, errMissingParams
+	} else {
+		return &MySQLMetaStore{mysqlService: mysql, client: mysql.Client}, nil
+	}
 }
 
 /*
@@ -252,6 +255,7 @@ func (m *MySQLMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	if v.Repo != "" {
 		// find or create project
 		_, ferr := m.findProject(v.Repo)
+
 		if ferr != nil {
 			// project does not exist, create it
 			return nil, errProjectNotFound

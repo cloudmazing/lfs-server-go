@@ -13,6 +13,7 @@ MySQLService struct
 */
 type MySQLService struct {
 	Client *sql.DB
+	Fail   bool
 }
 
 /*
@@ -64,7 +65,7 @@ func NewMySQLSession() *MySQLService {
 	}
 
 	logger.Log(kv{"fn": "NewMySQLSession", "msg": "MySQL configuration validation failed"})
-	return nil
+	return &MySQLService{Fail: true}
 }
 
 func createTables(client *gorp.DbMap) error {

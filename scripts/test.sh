@@ -18,8 +18,8 @@ fi
 # install godep dependencies
 godep restore
 # space delimiter
-prereqs="cassandra"
-for p in $prereqs; do
+prereqs=("cassandra", "mysqld")
+for p in ${prereqs[@]}; do
   lf="`echo [$(echo $p | cut -b1)]${p:1}`"
   if [[ "x`ps -ef |grep $lf`" == "x" ]];then
    echo "$p does not look to be running, tests will fail"
