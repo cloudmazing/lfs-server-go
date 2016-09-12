@@ -14,11 +14,11 @@ func TestMySQLConfiguration(t *testing.T) {
 	Config.MySQL = &MySQLConfig{
 		Enabled:  true,
 		Host:     "127.0.0.1:3306",
-		Database: "lfs_server_go",
+		Database: "lfs_server_go_test",
 	}
 
-	mysql_store, err := NewMySQLMetaStore()
-	if mysql_store != nil {
+	mysqlStore, err := NewMySQLMetaStore()
+	if mysqlStore != nil {
 		t.Errorf("expected MySQL configration validation error, got : %s", err)
 	}
 }
@@ -123,18 +123,18 @@ func setupMySQLMeta() error {
 		Database: "lfs_server_go",
 	}
 
-	mysql_store, err := NewMySQLMetaStore()
+	mysqlStore, err := NewMySQLMetaStore()
 	if err != nil {
 		fmt.Printf("error initializing test meta store: %s\n", err)
 		return errors.New(fmt.Sprintf("error initializing test meta store: %s\n", err))
 	}
 
-	metaStoreTestMySQL = mysql_store
+	metaStoreTestMySQL = mysqlStore
 
 	// Clean up any test
-	mysql_store.client.Exec("TRUNCATE TABLE oid_maps")
-	mysql_store.client.Exec("TRUNCATE TABLE oids")
-	mysql_store.client.Exec("TRUNCATE TABLE projects")
+	mysqlStore.client.Exec("TRUNCATE TABLE oid_maps")
+	mysqlStore.client.Exec("TRUNCATE TABLE oids")
+	mysqlStore.client.Exec("TRUNCATE TABLE projects")
 
 	return nil
 }

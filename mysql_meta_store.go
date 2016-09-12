@@ -29,9 +29,8 @@ func NewMySQLMetaStore(mysqlService ...*MySQLService) (*MySQLMetaStore, error) {
 
 	if mysql.Fail {
 		return nil, errMissingParams
-	} else {
-		return &MySQLMetaStore{mysqlService: mysql, client: mysql.Client}, nil
 	}
+	return &MySQLMetaStore{mysqlService: mysql, client: mysql.Client}, nil
 }
 
 /*
