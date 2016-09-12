@@ -8,7 +8,7 @@ export logfile=log/lfs-server-go.log
 cd $(dirname $0)/../
 
 GO_ENV=${GO_ENV:-dev}
-
+which goreman > /dev/null || go get github.com/mattn/goreman
 export GO_ENV
 which godep > /dev/null || go get github.com/tools/godep
 godep restore
