@@ -350,3 +350,11 @@ func (s *MetaStore) Projects() ([]*MetaProject, error) {
 	})
 	return projects, err
 }
+
+/*
+AddProject (create a new project using POST)
+Only implemented on MySQL meta store
+*/
+func (s *MetaStore) AddProject(name string) error {
+	return errNotImplemented
+}

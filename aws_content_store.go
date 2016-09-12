@@ -125,6 +125,14 @@ func (s *AwsContentStore) Exists(meta *MetaObject) bool {
 	return true
 }
 
+/*
+AddProject (create a new project using POST)
+Only implemented on MySQL meta store
+*/
+func (s *AwsContentStore) AddProject(name string) error {
+	return errNotImplemented
+}
+
 func (s *AwsContentStore) setAcl() {
 	switch {
 	case Config.Aws.BucketAcl == "private":

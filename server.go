@@ -64,6 +64,7 @@ type GenericMetaStore interface {
 	Close()
 	DeleteUser(user string) error
 	AddUser(user, pass string) error
+	AddProject(projectName string) error
 	Users() ([]*MetaUser, error)
 	Objects() ([]*MetaObject, error)
 	Projects() ([]*MetaProject, error)
@@ -109,6 +110,7 @@ func NewApp(content GenericContentStore, meta GenericMetaStore) *App {
 	route := "/{namespace}/{repo}/objects/{oid}"
 	r.HandleFunc(route, app.GetContentHandler).Methods("GET", "HEAD").MatcherFunc(ContentMatcher)
 	r.HandleFunc(route, app.GetMetaHandler).Methods("GET", "HEAD").MatcherFunc(MetaMatcher)
+	r.HandleFunc("/search/{oid}", app.GetSearchHandler).Methods("GET")
 	r.HandleFunc(route, app.PutHandler).Methods("PUT").MatcherFunc(ContentMatcher)
 
 	r.HandleFunc("/{namespace}/{repo}/objects", app.PostHandler).Methods("POST").MatcherFunc(MetaMatcher)
@@ -155,6 +157,24 @@ func (a *App) GetContentHandler(w http.ResponseWriter, r *http.Request) {
 
 	io.Copy(w, content)
 	logRequest(r, 200)
+}
+
+// GetSearchHandler (search handler used by pre-push hooks)
+func (a *App) GetSearchHandler(w http.ResponseWriter, r *http.Request) {
+	rv := unpack(r)
+	meta, err := a.metaStore.Get(rv)
+	logger.Log(kv{"fn": "GetSearchHandler", "meta": err})
+	if err != nil {
+		if isAuthError(err) {
+			requireAuth(w, r)
+		} else {
+			writeStatus(w, r, 404)
+		}
+		return
+	}
+
+	logger.Log(kv{"fn": "GetSearchHandler", "meta": meta})
+	writeStatus(w, r, 200)
 }
 
 // Deep read, starting at path

@@ -68,6 +68,9 @@ func FindMetaStore() (GenericMetaStore, error) {
 	case "cassandra":
 		m, err := NewCassandraMetaStore(NewCassandraSession())
 		return m, err
+	case "mysql":
+		m, err := NewMySQLMetaStore(NewMySQLSession())
+		return m, err
 	default:
 		m, err := NewMetaStore(Config.MetaDB)
 		return m, err
