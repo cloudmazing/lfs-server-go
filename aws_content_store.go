@@ -4,19 +4,20 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/mitchellh/goamz/aws"
-	"github.com/mitchellh/goamz/s3"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
 )
 
 const (
 	ContentType = "binary/octet-stream"
 )
 
-// ContentStore provides a simple file system based storage.
+// AwsContentStore provides a simple file system based storage.
 type AwsContentStore struct {
 	client  *s3.S3
 	bucket  *s3.Bucket
