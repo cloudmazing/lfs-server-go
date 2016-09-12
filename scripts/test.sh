@@ -18,7 +18,7 @@ fi
 # install godep dependencies
 godep restore
 # space delimiter
-prereqs=("cassandra", "mysqld")
+prereqs=("Cassandra", "mysqld")
 for p in ${prereqs[@]}; do
   lf="`echo [$(echo $p | cut -b1)]${p:1}`"
   if [[ "x`ps -ef |grep $lf`" == "x" ]];then

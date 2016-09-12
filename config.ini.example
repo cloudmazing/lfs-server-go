@@ -38,8 +38,17 @@ Hosts = localhost:9042, anotherhost:9042
 ; Optional - used to select cassandra keyspace
 ; Defaults to lfs_server_go_GO_ENV, if GO_ENV is not set,
 ; Keyspace = lfs_server_go
+; Optional default 3
+ProtoVersion = 2
 ;Username =
 ;Password =
+
+[MySQL]
+Host = "localhost"
+Database = "lfs_server_go"
+Username = "root"
+Password = "password"
+Enabled = true
 
 ; LDAP section is optional - but suggested for large deployments
 [Ldap]
@@ -83,4 +92,3 @@ BucketName = lfs-server-go-objects
 ;public-read
 ;private
 BucketAcl = bucket-owner-full-control
-

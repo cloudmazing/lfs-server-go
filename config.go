@@ -2,19 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/fatih/structs"
-	"gopkg.in/ini.v1"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/fatih/structs"
+	"gopkg.in/ini.v1"
 )
 
 type CassandraConfig struct {
-	Hosts    string `json:"hosts"`
-	Keyspace string `json:"keyspace"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Enabled  bool   `json:"enabled"`
+	Hosts        string `json:"hosts"`
+	Keyspace     string `json:"keyspace"`
+	ProtoVersion int    `json:"ProtoVersion"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	Enabled      bool   `json:"enabled"`
 }
 
 type AwsConfig struct {
@@ -140,11 +142,12 @@ func init() {
 		BindPass:        "",
 	}
 	cassandraConfig := &CassandraConfig{
-		Hosts:    "localhost",
-		Keyspace: "lfs_server_go",
-		Username: "",
-		Password: "",
-		Enabled:  false,
+		Hosts:        "localhost",
+		Keyspace:     "lfs_server_go",
+		ProtoVersion: 3,
+		Username:     "",
+		Password:     "",
+		Enabled:      false,
 	}
 	mysqlConfig := &MySQLConfig{
 		Host:     "",
