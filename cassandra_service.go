@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/gocql/gocql"
 )
 
@@ -12,6 +13,7 @@ type CassandraService struct {
 // TODO: Add auth for cassandra
 func NewCassandraSession() *CassandraService {
 	cluster := gocql.NewCluster(Config.Cassandra.Hosts)
+	cluster.ProtoVersion = Config.Cassandra.ProtoVersion
 	q := fmt.Sprintf("create keyspace if not exists %s_%s with replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };", Config.Cassandra.Keyspace, GoEnv)
 	session, err := cluster.CreateSession()
 	err = session.Query(q).Exec()
