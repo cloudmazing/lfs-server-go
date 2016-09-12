@@ -131,7 +131,7 @@ AddProject (create a new project using POST)
 Only implemented on MySQL meta store
 */
 func (s *AwsContentStore) AddProject(name string) error {
-	return errNotImplemented
+	return errMySQLNotImplemented 
 }
 
 func (s *AwsContentStore) setAcl() {

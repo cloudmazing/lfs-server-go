@@ -13,5 +13,6 @@ var (
 	errSizeMismatch        = errors.New("Content size does not match")
 	errWriteS3             = errors.New("Erred writing to S3")
 	errNotImplemented      = errors.New("Not Implemented when using LDAP")
+        errMySQLNotImplemented = errors.New("Not Implemented when using 'bolt' or 'cassandra' meta store backend")
 	errMissingParams       = errors.New("Missing params")
 )
