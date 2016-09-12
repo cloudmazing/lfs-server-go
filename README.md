@@ -147,6 +147,12 @@ create database lfs_server_go_test;
 grant all privileges on lfs_server_go_test.* to 'lfs_server'@'localhost' identified by 'pass123';
 ```
 
+<<<<<<< HEAD
 MUST have Cassandra
 
 ```brew install cassandra```
+=======
+MUST have Cassandra -- currently only version 2.2 is supported.  See Issue #28
+
+```brew install cassandra22```
+>>>>>>> bb6c18ba767fa55892ea927f030384b94d6c057a
