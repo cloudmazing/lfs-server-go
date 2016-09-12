@@ -19,7 +19,6 @@ fi
 
 test ! -f ./lfs-server-go && godep go build
 
-which goreman > /dev/null || go install github.com/mattn/goreman
 goreman check
 
 echo "Using goreman to start lfs-server-go"
