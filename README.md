@@ -140,6 +140,7 @@ To build from source, use the Go tools:
 ## Testing
 
 MUST have AWS S3 credentials (public and secret keys)
+
 MUST create a database and user in mysql used for testing:
 
 ```
