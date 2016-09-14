@@ -66,14 +66,14 @@ go build
 
 ### S3
 
-If using S3, you'll need to set `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` in your environment
+If using S3, you'll need to set `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY` in your environment
 `AWS_ACCESS_KEY` is your AWS access key ID
-`AWS_SECRET_KEY` is your AWS secret key
+`AWS_SECRET_ACCESS_KEY` is your AWS secret key
 
 Example:
 ```
-export AWS_ACCESS_KEY=someLongString
-export AWS_SECRET_KEY=someLongerString/withMoreStuff
+export AWS_ACCESS_KEY_ID=someLongString
+export AWS_SECRET_ACCESS_KEY=someLongerString/withMoreStuff
 ```
 
 Or set it in the config file via the `AccessKeyId` and `SecretAccessKey` config settings
