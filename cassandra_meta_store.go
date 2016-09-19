@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/gob"
 	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/relops/cqlr"
@@ -14,6 +12,11 @@ type CassandraMetaStore struct {
 	cassandraService *CassandraService
 	client           *gocql.Session
 }
+
+const (
+	CassandraPendingTable   string = "pending_oids"
+	CassandraCommittedTable        = "oids"
+)
 
 func NewCassandraMetaStore(cassandraService ...*CassandraService) (*CassandraMetaStore, error) {
 	if len(cassandraService) == 0 {
@@ -31,7 +34,7 @@ func (self *CassandraMetaStore) Close() {
 func (self *CassandraMetaStore) createProject(project string) error {
 	counter := make(map[string]interface{}, 1)
 	self.client.Query("select count(*) as count from projects where name = ?", project).MapScan(counter)
-	if counter["count"].(int64) > 0 {
+	if val, ok := counter["count"].(int64); ok && val > 0 {
 		// already there
 		return nil
 	}
@@ -46,8 +49,16 @@ func (self *CassandraMetaStore) addOidToProject(oid string, project string) erro
 	return err
 }
 
+func (self *CassandraMetaStore) createPendingOid(oid string, size int64) error {
+	return self.client.Query("insert into pending_oids (oid, size) values (?, ?)", oid, size).Exec()
+}
+
 func (self *CassandraMetaStore) createOid(oid string, size int64) error {
 	return self.client.Query("insert into oids (oid, size) values (?, ?)", oid, size).Exec()
+}
+
+func (self *CassandraMetaStore) removePendingOid(oid string) error {
+	return self.client.Query("delete from pending_oids where oid = ?", oid).Exec()
 }
 
 func (self *CassandraMetaStore) removeOid(oid string) error {
@@ -89,16 +100,49 @@ func (self *CassandraMetaStore) findProject(projectName string) (*MetaProject, e
 	return &ct, nil
 }
 
+func (self *CassandraMetaStore) findPendingOid(oid string) (*MetaObject, error) {
+	meta, err := self.doFindOid(oid, CassandraPendingTable)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = false
+
+	return meta, nil
+}
+
 func (self *CassandraMetaStore) findOid(oid string) (*MetaObject, error) {
-	q := self.client.Query("select oid, size from oids where oid = ? limit 1", oid)
+	meta, err := self.doFindOid(oid, CassandraCommittedTable)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = true
+
+	return meta, nil
+}
+
+func (self *CassandraMetaStore) doFindOid(oid, table string) (*MetaObject, error) {
+	q := self.client.Query("select oid, size from "+table+" where oid = ? limit 1", oid)
 	b := cqlr.BindQuery(q)
-	var mo MetaObject
-	b.Scan(&mo)
 	defer b.Close()
-	if mo.Oid == "" {
+
+	var meta MetaObject
+	b.Scan(&meta)
+
+	if meta.Oid == "" {
 		return nil, errObjectNotFound
 	}
-	return &mo, nil
+
+	itr := self.cassandraService.Client.Query("select name from projects where oids contains ?", oid).Iter()
+	defer itr.Close()
+
+	var project string
+	for itr.Scan(&project) {
+		meta.ProjectNames = append(meta.ProjectNames, project)
+	}
+
+	return &meta, nil
 }
 
 /*
@@ -135,77 +179,140 @@ func (self *CassandraMetaStore) findAllProjects() ([]*MetaProject, error) {
 	return project_list, nil
 }
 
-/*
-provides access to the put crud operation
-Usage:
-Put(&RequestVars{
-Oid: "oid string",
-Size: 64,
-User: "admin",
-Password: "admin",
-epo: "my-repo",
-Authorization: "Basic YWRtaW46YWRtaW4=",
-})
-
-*/
+// Put() creates uncommitted objects from RequestVars and stores them in the
+// meta store
 func (self *CassandraMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	if !self.authenticate(v.Authorization) {
-		logger.Log(kv{"fn": "cassandra_meta_store", "msg": "Unauthorized"})
+		logger.Log(kv{"fn": "CassandraMetaStore.Put", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
-	if meta, err := self.Get(v); err == nil {
+
+	// Don't care here if it's pending or committed
+	if meta, err := self.doGet(v); err == nil {
+		return meta, nil
+	}
+
+	meta := &MetaObject{
+		Oid:          v.Oid,
+		Size:         v.Size,
+		ProjectNames: []string{v.Repo},
+		Existing:     false,
+	}
+
+	err := self.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+// Commit() finds uncommitted objects in the meta store using data in
+// RequestVars and commits them
+func (self *CassandraMetaStore) Commit(v *RequestVars) (*MetaObject, error) {
+	if !self.authenticate(v.Authorization) {
+		logger.Log(kv{"fn": "CassandraMetaStore.Commit", "msg": "Unauthorized"})
+		return nil, newAuthError()
+	}
+
+	meta, err := self.GetPending(v)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = true
+
+	err = self.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (self *CassandraMetaStore) doPut(meta *MetaObject) error {
+
+	if !meta.Existing {
+		// Creating pending object
+
+		if err := self.createPendingOid(meta.Oid, meta.Size); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// Committing pending object
+
+	if err := self.removePendingOid(meta.Oid); err != nil {
+		return err
+	}
+
+	// TODO transform this into a logged batch
+
+	if err := self.createOid(meta.Oid, meta.Size); err != nil {
+		return err
+	}
+
+	for _, project := range meta.ProjectNames {
+		// XXX pending projects?
+
+		if err := self.createProject(project); err != nil {
+			return err
+		}
+
+		if err := self.addOidToProject(meta.Oid, project); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Get() retrieves meta information for a committed object given information in
+// RequestVars
+func (self *CassandraMetaStore) Get(v *RequestVars) (*MetaObject, error) {
+	if !self.authenticate(v.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := self.doGet(v)
+	if err != nil {
+		return nil, err
+	} else if !meta.Existing {
+		return nil, errObjectNotFound
+	}
+
+	return meta, nil
+}
+
+// Same as Get() but for uncommitted objects
+func (self *CassandraMetaStore) GetPending(v *RequestVars) (*MetaObject, error) {
+	if !self.authenticate(v.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := self.doGet(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (self *CassandraMetaStore) doGet(v *RequestVars) (*MetaObject, error) {
+
+	if meta, err := self.findOid(v.Oid); err == nil {
 		meta.Existing = true
 		return meta, nil
 	}
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: v.Oid, Size: v.Size, Existing: false}
-	err := enc.Encode(meta)
-	perror(self.createOid(v.Oid, v.Size))
-	if v.Repo != "" {
-		// find or create project
-		_, ferr := self.findProject(v.Repo)
-		if ferr != nil {
-			// project does not exist, create it
-			perror(self.createProject(v.Repo))
-		}
-		perror(self.addOidToProject(v.Oid, v.Repo))
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &meta, nil
-}
 
-/*
-Provides access to the get crud operation
-Usage:
-Get(&RequestVars{
-Oid: "oid string",
-Size: 64,
-User: "admin",
-Password: "admin",
-epo: "my-repo",
-Authorization: "Basic YWRtaW46YWRtaW4=",
-})
-*/
-func (self *CassandraMetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !self.authenticate(v.Authorization) {
-		logger.Log(kv{"fn": "cassandra_meta_store", "msg": "Unauthorized"})
-		return nil, newAuthError()
+	if meta, err := self.findPendingOid(v.Oid); err == nil {
+		meta.Existing = false
+		return meta, nil
 	}
-	r, err := self.findOid(v.Oid)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: r.Oid, Size: r.Size}
-	err = enc.Encode(meta)
-	if err != nil {
-		return nil, err
-	}
-	return &meta, nil
+
+	return nil, errObjectNotFound
 }
 
 /*

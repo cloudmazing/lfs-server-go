@@ -61,6 +61,8 @@ type MetaUser struct {
 type GenericMetaStore interface {
 	Put(v *RequestVars) (*MetaObject, error)
 	Get(v *RequestVars) (*MetaObject, error)
+	GetPending(v *RequestVars) (*MetaObject, error)
+	Commit(v *RequestVars) (*MetaObject, error)
 	Close()
 	DeleteUser(user string) error
 	AddUser(user, pass string) error
@@ -220,7 +222,7 @@ func (a *App) GetMetaHandler(w http.ResponseWriter, r *http.Request) {
 	logRequest(r, 200)
 }
 
-// PostHandler instructs the client how to upload data
+// PostHandler instructs the client how to upload data (legacy API)
 func (a *App) PostHandler(w http.ResponseWriter, r *http.Request) {
 	rv := unpack(r)
 	meta, err := a.metaStore.Put(rv)
@@ -244,6 +246,7 @@ func (a *App) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	enc.Encode(a.Represent(rv, meta, meta.Existing, true))
+
 	logRequest(r, sentStatus)
 }
 
@@ -253,23 +256,21 @@ func (a *App) BatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	var responseObjects []*Representation
 
-	// Create a response object
 	for _, object := range bv.Objects {
-		meta, err := a.metaStore.Get(object)
-		if err == nil { // Object is found
-			responseObjects = append(responseObjects, a.Represent(object, meta, true, false))
-			continue
-		}
+		// Put() checks if the object already exists in the meta store and
+		// returns it if it does
+		meta, err := a.metaStore.Put(object)
 
 		if isAuthError(err) {
 			requireAuth(w, r)
 			return
 		}
 
-		// Object is not found
-		meta, err = a.metaStore.Put(object)
 		if err == nil {
-			responseObjects = append(responseObjects, a.Represent(object, meta, meta.Existing, true))
+			responseObjects = append(
+				responseObjects,
+				a.Represent(object, meta, meta.Existing, true),
+			)
 		}
 	}
 
@@ -289,19 +290,31 @@ func (a *App) BatchHandler(w http.ResponseWriter, r *http.Request) {
 // PutHandler receives data from the client and puts it into the content store
 func (a *App) PutHandler(w http.ResponseWriter, r *http.Request) {
 	rv := unpack(r)
-	meta, err := a.metaStore.Get(rv)
+	meta, err := a.metaStore.GetPending(rv)
 	if err != nil {
 		if isAuthError(err) {
 			requireAuth(w, r)
 		} else {
+			// TODO check if actually not found
 			writeStatus(w, r, 404)
 		}
 		return
 	}
 
-	if err := a.contentStore.Put(meta, r.Body); err != nil {
+	setInternalError := func(err error) {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, `{"message":"%s"}`, err)
+		logRequest(r, 500)
+	}
+
+	if err := a.contentStore.Put(meta, r.Body); err != nil {
+		setInternalError(err)
+		return
+	}
+
+	_, err = a.metaStore.Commit(rv)
+	if err != nil {
+		setInternalError(err)
 		return
 	}
 

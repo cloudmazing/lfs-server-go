@@ -366,9 +366,18 @@ func seedMetaStore() error {
 		return err
 	}
 
-	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: testRepo}
+	rv := &RequestVars{
+		Authorization: testAuth,
+		Oid:           contentOid,
+		Size:          contentSize,
+		Repo:          testRepo,
+	}
+
 	if _, err := testMetaStore.Put(rv); err != nil {
-		return err
+		return fmt.Errorf("Put(): %s\n", err.Error())
+	}
+	if _, err := testMetaStore.Commit(rv); err != nil {
+		return fmt.Errorf("Commit(): %s\n", err.Error())
 	}
 
 	return nil
