@@ -50,6 +50,13 @@ func initializeCassandra(session *gocql.Session) error {
 		return err
 	}
 
+	// Pending table
+	q = fmt.Sprintf("create table if not exists pending_oids(oid text primary key, size bigint);")
+	session.Query(q).Exec()
+	if err != nil {
+		return err
+	}
+
 	// user management
 	q = fmt.Sprintf("create table if not exists users(username text primary key, password text);")
 	return session.Query(q).Exec()

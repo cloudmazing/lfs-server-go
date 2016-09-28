@@ -1,12 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/base64"
-	"encoding/gob"
 	"fmt"
 	"strings"
+)
+
+const (
+	MySQLCommittedTable string = "oids"
+	MySQLPendingTable          = "pending_oids"
 )
 
 /*
@@ -148,7 +151,29 @@ func (m *MySQLMetaStore) createOid(oid string, size int64) error {
 	_, err := m.client.Exec("insert into oids (oid, size) values (?, ?)", oid, size)
 
 	if err != nil {
-		logger.Log(kv{"fn": "createOid", "msg": fmt.Sprintf("MySQL insert query failed with error %s", err)})
+		logger.Log(kv{"fn": "MySQLMetaStore.createOid", "msg": err})
+		return nil
+	}
+	return nil
+}
+
+// Create pending oid
+func (m *MySQLMetaStore) createPendingOid(oid string, size int64) error {
+	_, err := m.client.Exec("insert into pending_oids (oid, size) values (?, ?)", oid, size)
+
+	if err != nil {
+		logger.Log(kv{"fn": "MySQLMetaStore.createPendingOid", "msg": err})
+		return nil
+	}
+	return nil
+}
+
+// Remove pending oid
+func (m *MySQLMetaStore) removePendingOid(oid string) error {
+	_, err := m.client.Exec("delete from pending_oids where oid = ?", oid)
+
+	if err != nil {
+		logger.Log(kv{"fn": "MySQLMetaStore.removePendingOid", "msg": err})
 		return nil
 	}
 	return nil
@@ -210,85 +235,182 @@ func (m *MySQLMetaStore) addOidToProject(oid string, project string) error {
 		id   int64
 		name string
 	)
-	err := m.client.QueryRow("select * from projects where name = ?", project).Scan(&id, &name)
+	err := m.client.QueryRow("select id, name from projects where name = ?", project).Scan(&id, &name)
 	_, err = m.client.Exec("insert into oid_maps (oid, projectID) values (?, ?)", oid, id)
 	logger.Log(kv{"fn": "addOidToProject", "msg": err})
 	return err
 }
 
-// Find oid
-func (m *MySQLMetaStore) findOid(oid string) (*MetaObject, error) {
-	var mo MetaObject
-	err := m.client.QueryRow("select * from oids where oid = ?", oid).Scan(&mo.Oid, &mo.Size)
-
+func (m *MySQLMetaStore) findPendingOid(oid string) (*MetaObject, error) {
+	meta, err := m.doFindOid(oid, MySQLPendingTable)
 	if err != nil {
 		return nil, err
 	}
 
-	if mo.Oid == "" {
+	meta.Existing = false
+
+	return meta, nil
+}
+
+func (m *MySQLMetaStore) findOid(oid string) (*MetaObject, error) {
+	meta, err := m.doFindOid(oid, MySQLCommittedTable)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = true
+
+	return meta, nil
+}
+
+func (m *MySQLMetaStore) doFindOid(oid, table string) (*MetaObject, error) {
+	var meta MetaObject
+
+	err := m.client.QueryRow("select oid, size from "+table+" where oid = ?", oid).Scan(&meta.Oid, &meta.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	if meta.Oid == "" {
 		return nil, errObjectNotFound
 	}
 
-	return &mo, nil
+	return &meta, nil
 }
 
-/*
-Put (HTTP PUT handler)
-create OID and map to projects
-*/
+// Put() creates uncommitted objects from RequestVars and stores them in the
+// meta store
 func (m *MySQLMetaStore) Put(v *RequestVars) (*MetaObject, error) {
 	if !m.authenticate(v.Authorization) {
-		logger.Log(kv{"fn": "mysql_meta_store", "msg": "Unauthorized"})
+		logger.Log(kv{"fn": "MySQLMetaStore.Put", "msg": "Unauthorized"})
 		return nil, newAuthError()
 	}
 
-	if meta, err := m.Get(v); err == nil {
+	// Don't care here if it's pending or committed
+	if meta, err := m.doGet(v); err == nil {
+		return meta, nil
+	}
+
+	meta := &MetaObject{
+		Oid:          v.Oid,
+		Size:         v.Size,
+		ProjectNames: []string{v.Repo},
+		Existing:     false,
+	}
+
+	err := m.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+// Commit() finds uncommitted objects in the meta store using data in
+// RequestVars and commits them
+func (m *MySQLMetaStore) Commit(v *RequestVars) (*MetaObject, error) {
+	if !m.authenticate(v.Authorization) {
+		logger.Log(kv{"fn": "MySQLMetaStore.Commit", "msg": "Unauthorized"})
+		return nil, newAuthError()
+	}
+
+	meta, err := m.GetPending(v)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = true
+
+	err = m.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (m *MySQLMetaStore) doPut(meta *MetaObject) error {
+
+	if !meta.Existing {
+		// Creating pending object
+
+		if err := m.createPendingOid(meta.Oid, meta.Size); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// Committing pending object
+
+	if err := m.removePendingOid(meta.Oid); err != nil {
+		return err
+	}
+
+	// TODO transform this into a transaction
+
+	if err := m.createOid(meta.Oid, meta.Size); err != nil {
+		return err
+	}
+
+	for _, project := range meta.ProjectNames {
+		if _, err := m.findProject(project); err != nil {
+			if err = m.createProject(project); err != nil {
+				return err
+			}
+		}
+
+		if err := m.addOidToProject(meta.Oid, project); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *MySQLMetaStore) Get(v *RequestVars) (*MetaObject, error) {
+	if !m.authenticate(v.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := m.doGet(v)
+	if err != nil {
+		return nil, err
+	} else if !meta.Existing {
+		return nil, errObjectNotFound
+	}
+
+	return meta, nil
+}
+
+// Get() retrieves meta information for a committed object given information in
+// RequestVars
+func (m *MySQLMetaStore) GetPending(v *RequestVars) (*MetaObject, error) {
+	if !m.authenticate(v.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := m.doGet(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (m *MySQLMetaStore) doGet(v *RequestVars) (*MetaObject, error) {
+
+	if meta, err := m.findOid(v.Oid); err == nil {
 		meta.Existing = true
 		return meta, nil
 	}
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: v.Oid, Size: v.Size, Existing: false}
-	err := enc.Encode(meta)
-	perror(m.createOid(v.Oid, v.Size))
-	if v.Repo != "" {
-		// find or create project
-		_, ferr := m.findProject(v.Repo)
 
-		if ferr != nil {
-			// project does not exist, create it
-			return nil, errProjectNotFound
-		}
-		perror(m.addOidToProject(v.Oid, v.Repo))
+	if meta, err := m.findPendingOid(v.Oid); err == nil {
+		meta.Existing = false
+		return meta, nil
 	}
-	if err != nil {
-		return nil, err
-	}
-	return &meta, nil
-}
 
-/*
-Get (HTTP Get handler)
-*/
-func (m *MySQLMetaStore) Get(v *RequestVars) (*MetaObject, error) {
-	if !m.authenticate(v.Authorization) {
-		logger.Log(kv{"fn": "mysql_meta_store", "msg": "Unauthorized"})
-		return nil, newAuthError()
-	}
-	r, err := m.findOid(v.Oid)
-
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	logger.Log(kv{"fn": "Get", "msg": r})
-	meta := MetaObject{Oid: r.Oid, Size: r.Size}
-	err = enc.Encode(meta)
-	if err != nil {
-		return nil, err
-	}
-	return &meta, nil
+	return nil, errObjectNotFound
 }
 
 /*

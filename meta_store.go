@@ -54,13 +54,38 @@ func NewMetaStore(dbFile string) (*MetaStore, error) {
 	return &MetaStore{db: db}, nil
 }
 
-// Get retrieves the Meta information for an object given information in
+// Get() retrieves meta information for a committed object given information in
 // RequestVars
 func (s *MetaStore) Get(rv *RequestVars) (*MetaObject, error) {
 	if !s.authenticate(rv.Authorization) {
 		return nil, newAuthError()
 	}
 
+	meta, err := s.doGet(rv)
+	if err != nil {
+		return nil, err
+	} else if !meta.Existing {
+		return nil, errObjectNotFound
+	}
+
+	return meta, nil
+}
+
+// Same as Get() but for uncommitted objects
+func (s *MetaStore) GetPending(rv *RequestVars) (*MetaObject, error) {
+	if !s.authenticate(rv.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := s.doGet(rv)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (s *MetaStore) doGet(rv *RequestVars) (*MetaObject, error) {
 	var meta MetaObject
 	err := s.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(objectsBucket)
@@ -78,7 +103,7 @@ func (s *MetaStore) Get(rv *RequestVars) (*MetaObject, error) {
 	})
 
 	if err != nil {
-		logger.Log(kv{"fn": "meta_store", "msg": err.Error()})
+		logger.Log(kv{"fn": "MetaStore.doGet", "msg": err.Error()})
 		return nil, err
 	}
 
@@ -140,26 +165,18 @@ func (s *MetaStore) createProject(rv *RequestVars) error {
 	return err
 }
 
-// Put writes meta information from RequestVars to the store.
+// Put() creates uncommitted objects from RequestVars and stores them in the
+// meta store
 func (s *MetaStore) Put(rv *RequestVars) (*MetaObject, error) {
 	if !s.authenticate(rv.Authorization) {
 		return nil, newAuthError()
 	}
 
-	// Check if it exists first
-	if meta, err := s.Get(rv); err == nil {
-		meta.Existing = true
+	// Don't care here if it's pending or committed
+	if meta, err := s.doGet(rv); err == nil {
 		return meta, nil
 	}
 
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	meta := MetaObject{Oid: rv.Oid, Size: rv.Size, ProjectNames: []string{rv.Repo}}
-	err := enc.Encode(meta)
-	if err != nil {
-		return nil, err
-	}
-	// create the project first, if we can
 	if rv.Repo != "" {
 		err := s.createProject(rv)
 		if err != nil {
@@ -168,25 +185,64 @@ func (s *MetaStore) Put(rv *RequestVars) (*MetaObject, error) {
 		}
 	}
 
-	err = s.db.Update(func(tx *bolt.Tx) error {
+	meta := &MetaObject{
+		Oid:          rv.Oid,
+		Size:         rv.Size,
+		ProjectNames: []string{rv.Repo},
+		Existing:     false,
+	}
+
+	err := s.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+// Commit() finds uncommitted objects in the meta store using data in
+// RequestVars and commits them
+func (s *MetaStore) Commit(rv *RequestVars) (*MetaObject, error) {
+	if !s.authenticate(rv.Authorization) {
+		return nil, newAuthError()
+	}
+
+	meta, err := s.GetPending(rv)
+	if err != nil {
+		return nil, err
+	}
+
+	meta.Existing = true
+
+	err = s.doPut(meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
+func (s *MetaStore) doPut(meta *MetaObject) error {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(meta)
+	if err != nil {
+		return err
+	}
+
+	return s.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(objectsBucket)
 		if bucket == nil {
 			return errNoBucket
 		}
 
-		err = bucket.Put([]byte(rv.Oid), buf.Bytes())
+		err = bucket.Put([]byte(meta.Oid), buf.Bytes())
 		if err != nil {
 			return err
 		}
 
 		return nil
 	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &meta, nil
 }
 
 // Close closes the underlying boltdb.

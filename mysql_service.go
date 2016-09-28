@@ -71,8 +71,8 @@ func NewMySQLSession() *MySQLService {
 func createTables(client *gorp.DbMap) error {
 	client.AddTableWithName(Projects{}, "projects").SetKeys(true, "id").ColMap("name").SetUnique(true)
 	client.AddTableWithName(Oids{}, "oids").SetKeys(false, "oid")
+	client.AddTableWithName(Oids{}, "pending_oids").SetKeys(false, "oid")
 	client.AddTableWithName(OidMaps{}, "oid_maps")
-	// dbmap.AddTableWithName(users{}, "users").SetKeys(false, "name")
 	err := client.CreateTablesIfNotExists()
 
 	if err != nil {

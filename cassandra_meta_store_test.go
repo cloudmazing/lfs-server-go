@@ -15,16 +15,16 @@ func TestCassandraGetWithAuth(t *testing.T) {
 	if serr != nil {
 		t.Errorf(serr.Error())
 	}
-
 	defer teardownCassandraMeta()
-	metaFail, errA := metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: noAuthOid})
-	if errA == nil {
-		t.Fatalf("Error Should not have access to OID: %s", metaFail.Oid)
+
+	meta, err := metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: noAuthOid})
+	if err == nil {
+		t.Fatalf("expected get to fail with unknown oid, got: %s", meta.Oid)
 	}
 
-	meta, err := metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: contentOid})
+	meta, err = metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: contentOid})
 	if err != nil {
-		t.Fatalf("Error retreiving meta: %s", err)
+		t.Fatalf("expected get to succeed, got: %s", err)
 	}
 
 	if meta.Oid != contentOid {
@@ -41,10 +41,14 @@ func TestCassandraGetWithoutAuth(t *testing.T) {
 	if serr != nil {
 		t.Errorf(serr.Error())
 	}
-
 	defer teardownCassandraMeta()
 
 	_, err := metaStoreTestCassandra.Get(&RequestVars{Authorization: badAuth, Oid: contentOid})
+	if !isAuthError(err) {
+		t.Errorf("expected auth error, got: %s", err)
+	}
+
+	_, err = metaStoreTestCassandra.Get(&RequestVars{Oid: contentOid})
 	if !isAuthError(err) {
 		t.Errorf("expected auth error, got: %s", err)
 	}
@@ -90,21 +94,25 @@ func TestCassandraPutWithAuth(t *testing.T) {
 	if serr != nil {
 		t.Errorf(serr.Error())
 	}
-
 	defer teardownCassandraMeta()
 
 	meta, err := metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, Oid: nonexistingOid, Size: 42})
 	if err != nil {
-		t.Errorf("expected put to succeed, got : %s", err)
+		t.Errorf("expected put to succeed, got: %s", err)
 	}
 
 	if meta.Existing {
 		t.Errorf("expected meta to not have existed")
 	}
 
-	meta, err = metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: nonexistingOid})
+	_, err = metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: nonexistingOid})
+	if err == nil {
+		t.Errorf("expected new put to not be committed yet")
+	}
+
+	meta, err = metaStoreTestCassandra.GetPending(&RequestVars{Authorization: testAuth, Oid: nonexistingOid})
 	if err != nil {
-		t.Errorf("expected to be able to retreive new put, got : %s", err)
+		t.Errorf("expected new put to be pending, got: %s", err)
 	}
 
 	if meta.Oid != nonexistingOid {
@@ -115,13 +123,31 @@ func TestCassandraPutWithAuth(t *testing.T) {
 		t.Errorf("expected sizes to match, got: %d", meta.Size)
 	}
 
-	meta, err = metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, Oid: nonexistingOid, Size: 42})
+	meta, err = metaStoreTestCassandra.Commit(&RequestVars{Authorization: testAuth, Oid: nonexistingOid, Size: 42})
 	if err != nil {
-		t.Errorf("expected put to succeed, got : %s", err)
+		t.Errorf("expected commit to succeed, got: %s", err)
 	}
 
 	if !meta.Existing {
-		t.Errorf("expected meta to now exist")
+		t.Errorf("expected existing to become true after commit")
+	}
+
+	_, err = metaStoreTestCassandra.Get(&RequestVars{Authorization: testAuth, Oid: nonexistingOid})
+	if err != nil {
+		t.Errorf("expected new put to be committed now, got: %s", err)
+	}
+
+	if !meta.Existing {
+		t.Errorf("expected existing to be true for a committed object")
+	}
+
+	meta, err = metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, Oid: nonexistingOid, Size: 42})
+	if err != nil {
+		t.Errorf("expected putting an duplicate object to succeed, got: %s", err)
+	}
+
+	if !meta.Existing {
+		t.Errorf("expecting existing to be true for a duplicate object")
 	}
 }
 
@@ -137,9 +163,9 @@ func TestCassandraPutWithoutAuth(t *testing.T) {
 		t.Errorf("expected auth error, got: %s", err)
 	}
 
-	_, errPut := metaStoreTestCassandra.Put(&RequestVars{Authorization: testAuth, User: testUser, Oid: contentOid, Size: 42, Repo: testRepo})
-	if errPut != nil {
-		t.Errorf("Unexpected error in Put: %s", errPut)
+	_, err = metaStoreTestCassandra.Put(&RequestVars{User: testUser, Oid: contentOid, Size: 42, Repo: testRepo})
+	if !isAuthError(err) {
+		t.Errorf("expected auth error, got: %s", err)
 	}
 }
 
@@ -184,16 +210,35 @@ func TestCassandraOids(t *testing.T) {
 		t.Errorf("Failed remove OID")
 	}
 
+	err := metaStoreTestCassandra.createPendingOid(nonexistingOid, 1)
+	if err != nil {
+		t.Errorf("Failed to create pending OID")
+	}
+
+	_, err = metaStoreTestCassandra.findPendingOid(nonexistingOid)
+	if err != nil {
+		t.Errorf("Failed to find pending OID")
+	}
+
+	err = metaStoreTestCassandra.removePendingOid(nonexistingOid)
+	if err != nil {
+		t.Errorf("Failed to remove pending OID")
+	}
+
+	_, err = metaStoreTestCassandra.findPendingOid(nonexistingOid)
+	if err == nil {
+		t.Errorf("Did not expect to find removed pending OID")
+	}
 }
 
 func TestCassandraProjects(t *testing.T) {
-	err := setupCassandraMeta()
-	if err != nil {
-		t.Errorf(err.Error())
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
 	}
 	defer teardownCassandraMeta()
 
-	err = metaStoreTestCassandra.createProject(extraRepo)
+	err := metaStoreTestCassandra.createProject(extraRepo)
 	if err != nil {
 		t.Errorf("Failed to create project")
 	}
@@ -244,13 +289,13 @@ func TestCassandraProjects(t *testing.T) {
 }
 
 func TestProjectOidRelationship(t *testing.T) {
-	err := setupCassandraMeta()
-	if err != nil {
-		t.Errorf(err.Error())
+	serr := setupCassandraMeta()
+	if serr != nil {
+		t.Errorf(serr.Error())
 	}
 	defer teardownCassandraMeta()
 
-	err = metaStoreTestCassandra.createProject(testRepo)
+	err := metaStoreTestCassandra.createProject(testRepo)
 	if err != nil {
 		t.Errorf("Failed creating project")
 	}
@@ -279,11 +324,18 @@ func setupCassandraMeta() error {
 	}
 
 	rv := &RequestVars{Authorization: testAuth, Oid: contentOid, Size: contentSize, Repo: testRepo}
+
 	if _, err := metaStoreTestCassandra.Put(rv); err != nil {
 		teardownCassandraMeta()
 		fmt.Printf("error seeding cassandra test meta store: %s\n", err)
 		return errors.New(fmt.Sprintf("error seeding cassandra test meta store: %s\n", err))
 	}
+	if _, err := metaStoreTestCassandra.Commit(rv); err != nil {
+		teardownCassandraMeta()
+		fmt.Printf("error seeding cassandra test meta store: %s\n", err)
+		return errors.New(fmt.Sprintf("error seeding cassandra test meta store: %s\n", err))
+	}
+
 	return nil
 }
 
