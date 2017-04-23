@@ -54,7 +54,7 @@ services:
       - '8080:9090'
       - '5000:5000'
     volumes:
-      - '.:/lfs-server-go'
+      - '.:/go/src/lfs-server-go'
     depends_on:
       - cassandra-1
     links:
