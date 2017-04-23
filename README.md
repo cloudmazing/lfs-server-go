@@ -32,8 +32,7 @@ Once built:
 
 Since cassandra takes forever to start:
 
-`docker-compose up cassandra-1`
-`docker-compose up app`
+`docker-compose start app`
 
 Then connect to it at http://localhost:9999/mgmt
 
