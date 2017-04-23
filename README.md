@@ -24,6 +24,24 @@ This is based off of [lfs-test-server](https://github.com/github/lfs-test-server
 1. Adopt [verification of uploads](https://github.com/github/git-lfs/tree/master/docs/api#verification)
 1. Redo the UI so it is abstracted into its own app  
 
+## Running in Docker
+
+`docker-compose build app`
+
+Once built:
+
+Since cassandra takes forever to start:
+
+`docker-compose up cassandra-1`
+`docker-compose up app`
+
+Then connect to it at http://localhost:9999/mgmt
+
+AdminUser = admin_username
+
+AdminPass = admin_password
+
+
 ## Installing
 
 Use the Go installer, this will install all dependencies tracked:

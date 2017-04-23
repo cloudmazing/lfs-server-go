@@ -1,0 +1,64 @@
+version: '3.0'
+
+services:
+  # Add more of these for a cluster
+  cassandra-1:
+    hostname: cassandra-1
+    image: cassandra:latest
+    command: /bin/bash -c "sleep 1 && echo ' -- Pausing to let system catch up ... -->' && /docker-entrypoint.sh cassandra -f"
+    environment:
+      CASSANDRA_DC: 'dc1'
+      CASSANDRA_CLUSTER_NAME: 'lfs-server-go-cluster'
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+    ports:
+      - '9042:9042'
+    volumes:
+      - 'data:/var/lib/cassandra'
+#    links:
+#      - cassandra-2
+
+  #cassandra-2:
+  #  hostname: cassandra-2
+  #  image: cassandra:latest
+  #  command: /bin/bash -c "sleep 30 && echo ' -- Pausing to let system catch up ... -->' && /docker-entrypoint.sh cassandra -f"
+  #  environment:
+  #    CASSANDRA_DC: 'dc1'
+  #    CASSANDRA_CLUSTER_NAME: 'lfs-server-go-cluster'
+  #  links:
+  #    - cassandra-1
+  #  expose:
+  #    - 7000
+  #    - 7001
+  #    - 7199
+  #    - 9042
+  #    - 9160
+  #  - 'data:/var/lib/cassandra'
+
+  app:
+    build: .
+    command: bash -c "./scripts/start"
+    environment:
+      GO_ENV: dev
+      AWS_ACCESS_KEY: ''
+      AWS_SECRET_ACCESS_KEY: ''
+      LFS_SERVER_GO_CONFIG: 'config.ini'
+      DAEMONIZE: 0
+      CASSANDRA_PORT: 9042
+    ports:
+      - '9999:9999'
+      - '8080:9090'
+      - '5000:5000'
+    volumes:
+      - '.:/lfs-server-go'
+    depends_on:
+      - cassandra-1
+    links:
+      - cassandra-1
+
+volumes:
+  data: {}
