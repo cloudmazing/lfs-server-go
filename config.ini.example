@@ -2,7 +2,7 @@
 ; Port to listen on
 Listen = tcp://:9999
 ; Host address - used for downloading
-Host = 127.0.0.1:9999
+Host = 0.0.0.0:9999
 ; login for the admin user
 AdminUser = admin_username
 AdminPass = admin_password
@@ -24,17 +24,18 @@ ContentPath = lfs_content
 ContentStore = filesystem
 ; BackingStore options are [cassandra, bolt]
 ; bolt requires no external services
-BackingStore = bolt
+BackingStore = cassandra
 ; NumProcs defaults to the number of processors available to the system
 ; based on what runtime.NumCPU() returns
 ; NumProcs = <some number>
 
 ; Cassandra section is optional - but suggested for large deployments
 [Cassandra]
-Enabled = false
+Enabled = true
 ; Optional - for storing meta content in Cassandra
 ; comma separated
-Hosts = localhost:9042, anotherhost:9042
+;Hosts = cassandra-1:9042 ;, anotherhost:9042
+Hosts = cassandra-1:9042
 ; Optional - used to select cassandra keyspace
 ; Defaults to lfs_server_go_GO_ENV, if GO_ENV is not set,
 ; Keyspace = lfs_server_go
